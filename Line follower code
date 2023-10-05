@@ -1,0 +1,4 @@
+// defining which ports each sensor goes to
+#define LS 2
+#define RS 3
+#define 
