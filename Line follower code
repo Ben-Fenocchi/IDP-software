@@ -7,39 +7,71 @@ Adafruit_DCMotor leftMotor = AFMS.getMotor(1);//1 is the port on the motor shiel
 Adafruit_DCMotor rightMotor = AFMS.getMotor(2);
 
 // defining which ports each sensor goes to
-int downSensor = 4
-int sideSensor = 5
+//block sensors
+int downSensor = 4;
+int sideSensor = 5;
+//line sensors, 2 on the front, one each side
+int frLS = 6; // front right line sensor
+int flLS = 7; //front left line sensor
+int leftLS = 8;
+int rightLS = 9;
 
 void setup(){
-    Serial.begin(9600); //select the baud rate "9600" in the tool bar on arduino IDE
     //serial allows the arduino board to communicate with the computer
-    pinMode(downSensor, INPUT)
-    pinMode(sideSensor, INPUT)
-    if (!AFMS.begin()) {         // tries to start AFMS, if not pauses program in a while loop and prints error message
+    Serial.begin(9600); //select the baud rate "9600" in the tool bar on arduino IDE
+    
+
+    //setting up all the pins
+
+    //distance sensors
+    pinMode(downSensor, INPUT);
+    pinMode(sideSensor, INPUT);
+    pinMode(frLS,INPUT);
+    pinMode(flLS,INPUT);
+    pinMode(leftLS,INPUT);
+    pinMOde(rightLS,INPUT);
+
+    // tries to start AFMS, if not pauses program in a while loop and prints error message
+    if (!AFMS.begin()) {    
         Serial.println("Could not find Motor Shield. Check wiring.");
         while (1);
-  }
-  Serial.println("Motor Shield found.");
+    }
+    Serial.println("Motor Shield found.");
 }
 
+
+
+//main loop
 void loop(){
 
 }
 
-void rmSpeed(speed){  //sets speed of right motor, 
+
+
+//if following doesnt work, best to use 2 functions, one for each motor, and then use the specific name instead of motorName, e.g. leftMotor as defined at start of program
+void setMotorSpeed(speed,motorName){  //sets speed of motor, 
     if (speed == oldSpeed)//check if speed different to reduce potential traffic
         return;
     else {
         //sets the direction and speed, 0 is off, 255 is max
         if (speed <0 ){
-            myMotor->run(BACKWARD);
-            rightMotor -> setSpeed(speed*-1);
+            motorName->run(BACKWARD);
+            motorName -> setSpeed(speed*-1);
         }
         else{
-            myMotor->run(FORWARD);
-            rightMotor -> setSpeed(speed);
+            motorName->run(FORWARD);
+            motorName -> setSpeed(speed);
         }
         oldSpeed = speed;
     }
 }
 
+
+void followLine(){
+    int valLeft = digitalRead(flLS);
+    int valRight = digitalRead(frRS);
+    if (valLeft )....//finish line follower code
+}
+void moveToJunction(){
+
+}
