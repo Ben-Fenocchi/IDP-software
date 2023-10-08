@@ -1,4 +1,45 @@
+//libraries for motor control (I havent downloaded any of these)
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
+Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
+Adafruit_DCMotor leftMotor = AFMS.getMotor(1);//1 is the port on the motor shield the motor is connected to
+Adafruit_DCMotor rightMotor = AFMS.getMotor(2);
+
 // defining which ports each sensor goes to
-#define LS 2
-#define RS 3
-#define 
+int downSensor = 4
+int sideSensor = 5
+
+void setup(){
+    Serial.begin(9600); //select the baud rate "9600" in the tool bar on arduino IDE
+    //serial allows the arduino board to communicate with the computer
+    pinMode(downSensor, INPUT)
+    pinMode(sideSensor, INPUT)
+    if (!AFMS.begin()) {         // tries to start AFMS, if not pauses program in a while loop and prints error message
+        Serial.println("Could not find Motor Shield. Check wiring.");
+        while (1);
+  }
+  Serial.println("Motor Shield found.");
+}
+
+void loop(){
+
+}
+
+void rmSpeed(speed){  //sets speed of right motor, 
+    if (speed == oldSpeed)//check if speed different to reduce potential traffic
+        return;
+    else {
+        //sets the direction and speed, 0 is off, 255 is max
+        if (speed <0 ){
+            myMotor->run(BACKWARD);
+            rightMotor -> setSpeed(speed*-1);
+        }
+        else{
+            myMotor->run(FORWARD);
+            rightMotor -> setSpeed(speed);
+        }
+        oldSpeed = speed;
+    }
+}
+
