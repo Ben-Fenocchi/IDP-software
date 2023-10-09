@@ -1,0 +1,53 @@
+import serial
+import matplotlib.pyplot as plt
+from drawnow import drawnow
+
+# Create lists to store the data
+times = []
+data = []
+plt.ion()  # Enable interactive mode
+
+# Connect to the Arduino
+ser = serial.Serial('COM3', 9600)  # Change 'COM3' to your Arduino's serial port name
+
+def plot_values():
+    plt.title('Ultrasonic Distance Sensor Readings')
+    plt.grid(True)
+    plt.ylabel('Distance (possibly in cm)')
+    plt.plot(times, data, 'ro-', label='Distance')
+    plt.legend(loc='upper right')
+
+for i in range(100):  # You can change the range value for more or fewer data points
+    while (ser.inWaiting() == 0):
+        pass
+    value = ser.readline().decode('utf-8').rstrip()
+    data.append(int(value))
+    times.append(i)
+    drawnow(plot_values)
+    if len(data) > 50:
+        data.pop(0)
+        times.pop(0)
+
+ser.close()
+
+
+
+
+
+
+
+
+
+
+
+const int sensorPin = A0;  // Change this if your sensor is connected to a different analog pin
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int sensorValue = analogRead(sensorPin);
+  Serial.println(sensorValue);
+  delay(100);  // Delay for 100ms. Adjust this for faster or slower updates.
+}
