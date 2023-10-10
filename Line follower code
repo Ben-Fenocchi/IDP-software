@@ -5,7 +5,7 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "DFRobot_VL53L0X.h"
-DFRobot_VL53L0X sensor;
+DFRobot_VL53L0X tofSensor;
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 Adafruit_DCMotor leftMotor = AFMS.getMotor(1);//1 is the port on the motor shield the motor is connected to
 Adafruit_DCMotor rightMotor = AFMS.getMotor(2);
@@ -21,7 +21,7 @@ int leftLS = 8;
 int rightLS = 9;
 
 int defaultSpeed = 100 //default speed for the motors to spin at (0-255)
-int white = //set this for the value the line sensor reads when it sees white
+
 
 void setup(){
     //serial allows the arduino board to communicate with the computer
@@ -51,11 +51,11 @@ void setup(){
     //join i2c bus (address optional for master)
     Wire.begin();
     //Set I2C sub-device address
-    sensor.begin(0x50);
+    tofSensor.begin(0x50);
     //Set to Back-to-back mode and high precision mode
-    sensor.setMode(sensor.eContinuous,sensor.eHigh);
+    tofSensor.setMode(tofSensor.eContinuous,tofSensor.eHigh);
     //Laser rangefinder begins to work
-    sensor.start();
+    tofSensor.start();
 }
 
 
@@ -106,7 +106,7 @@ void moveToJunction(){
     followLine();
     valLeft = digitalRead(leftLS);
     valRight = digitalRead(rightLS);
-    if(valLeft > white or valRight> white){
+    if(valLeft == 1 or valRight== 1){
         return("junction")
         setMotorSpeed(0,leftMotor)
         setMotorSpeed(0,rightMotor)
@@ -125,6 +125,12 @@ void rightTurn(){
     setMotorSpeed(50,leftMotor);
     
 }
+
+void checkForBlockDownwards(){
+    int reading = tofSensor.getDistance();
+    //
+}
+
 //values for the tof sensor when touching cubes
 //46 dense
 //58 less dense
