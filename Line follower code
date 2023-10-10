@@ -2,6 +2,10 @@
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+DFRobot_VL53L0X sensor;
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 Adafruit_DCMotor leftMotor = AFMS.getMotor(1);//1 is the port on the motor shield the motor is connected to
 Adafruit_DCMotor rightMotor = AFMS.getMotor(2);
@@ -40,6 +44,18 @@ void setup(){
         while (1);
     }
     Serial.println("Motor Shield found.");
+
+
+    //setting up tof sensor
+    
+    //join i2c bus (address optional for master)
+    Wire.begin();
+    //Set I2C sub-device address
+    sensor.begin(0x50);
+    //Set to Back-to-back mode and high precision mode
+    sensor.setMode(sensor.eContinuous,sensor.eHigh);
+    //Laser rangefinder begins to work
+    sensor.start();
 }
 
 
@@ -85,7 +101,7 @@ void followLine(){
 }
 
 
-
+//If we move to a junction and then kill the motors, if the car stops with the line sensors on the junction, when we run the next
 void moveToJunction(){
     followLine();
     valLeft = digitalRead(leftLS);
@@ -109,3 +125,6 @@ void rightTurn(){
     setMotorSpeed(50,leftMotor);
     
 }
+//values for the tof sensor when touching cubes
+//46 dense
+//58 less dense
