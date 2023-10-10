@@ -16,6 +16,9 @@ int flLS = 7; //front left line sensor
 int leftLS = 8;
 int rightLS = 9;
 
+int defaultSpeed = 100 //default speed for the motors to spin at (0-255)
+int white = //set this for the value the line sensor reads when it sees white
+
 void setup(){
     //serial allows the arduino board to communicate with the computer
     Serial.begin(9600); //select the baud rate "9600" in the tool bar on arduino IDE
@@ -50,8 +53,9 @@ void loop(){
 
 //if following doesnt work, best to use 2 functions, one for each motor, and then use the specific name instead of motorName, e.g. leftMotor as defined at start of program
 void setMotorSpeed(speed,motorName){  //sets speed of motor, 
-    if (speed == oldSpeed)//check if speed different to reduce potential traffic
+    if (speed == oldSpeed){//check if speed different to reduce potential traffic
         return;
+    }
     else {
         //sets the direction and speed, 0 is off, 255 is max
         if (speed <0 ){
@@ -70,8 +74,38 @@ void setMotorSpeed(speed,motorName){  //sets speed of motor,
 void followLine(){
     int valLeft = digitalRead(flLS);
     int valRight = digitalRead(frRS);
-    if (valLeft )....//finish line follower code
+    if (valLeft> valRight){ //if left sensor is on white line but left isnt
+        setMotorSpeed((defaultMotorSpeed + 3), rightMotor); // spin the right motor faster to correct for this
+        setMotorSpeed(defaultMotorSpeed, leftMotor);
+    }
+    else{
+        setMotorSpeed((defaultMotorSpeed + 3), leftMotor);
+        setMotorSpeed(defaultMotorSpeed, rightMotor);
+    }
 }
-void moveToJunction(){
 
+
+
+void moveToJunction(){
+    followLine();
+    valLeft = digitalRead(leftLS);
+    valRight = digitalRead(rightLS);
+    if(valLeft > white or valRight> white){
+        return("junction")
+        setMotorSpeed(0,leftMotor)
+        setMotorSpeed(0,rightMotor)
+    }
+}
+
+
+void leftTurn(){
+    setMotorSpeed(-50, leftMotor);
+    setMotorSpeed(50,rightMotor);
+
+}
+
+void rightTurn(){
+    setMotorSpeed(-50, rightMotor);
+    setMotorSpeed(50,leftMotor);
+    
 }
