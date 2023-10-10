@@ -5,21 +5,32 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "DFRobot_VL53L0X.h"
+
+//tof setup
 DFRobot_VL53L0X tofSensor;
+
+//ultrasound setup
+#define MAX_RANG (520)
+#define ADC_SOLUTION (1023.0)
+
+//motorshield setup
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 Adafruit_DCMotor leftMotor = AFMS.getMotor(1);//1 is the port on the motor shield the motor is connected to
 Adafruit_DCMotor rightMotor = AFMS.getMotor(2);
 
-// defining which ports each sensor goes to
-//block sensors
-int downSensor = 4;
-int sideSensor = 5;
+// defining which ports each sensor goes to (tof sensor doessnt need pins defined, it has its own one)
+
+//ultrasound sensor
+int sideSensor = A0;
 //line sensors, 2 on the front, one each side
 int frLS = 6; // front right line sensor
 int flLS = 7; //front left line sensor
 int leftLS = 8;
 int rightLS = 9;
 
+
+int reading //defined to use later as the tof reading variable
+float dist_t, sensity_t;//for the ultrasound sensor
 int defaultSpeed = 100 //default speed for the motors to spin at (0-255)
 
 
@@ -62,6 +73,8 @@ void setup(){
 
 //main loop
 void loop(){
+    //to get ultrasound reading:   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
+    //to get tof reading:          reading = tofSensor.getDistance()
 
 }
 
@@ -127,7 +140,7 @@ void rightTurn(){
 }
 
 void checkForBlockDownwards(){
-    int reading = tofSensor.getDistance();
+    reading = tofSensor.getDistance();
     //
 }
 
