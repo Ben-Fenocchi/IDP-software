@@ -21,10 +21,10 @@ Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
 
 
 //int sideSensor = A0;//ultrasound sensor
-int frLS = 6; // front right line sensor
-int flLS = 7; // front left line sensor
-int leftLS = 8;// left side line sensor
-int rightLS = 9;// right side line sensor
+int frLS = 7; // front right line sensor
+int flLS = 6; // front left line sensor
+int leftLS = 4;// left side line sensor
+int rightLS = 5;// right side line sensor
 
 /*
 int reading //defined to use later as the tof reading variable
@@ -54,11 +54,12 @@ void setup() {
 }
 
 void loop() {
-
+  
   speedRight(rightMotor, defaultSpeed);
   speedLeft(leftMotor, defaultSpeed);
 
-  if (moveToJunction()==1){
+  int test1 = moveToJunction;
+  if (test1 ==1){
     Serial.println("We have found the junction!");
   }
   
@@ -112,7 +113,8 @@ void followLine() {
     if (valLeft > valRight) {
         speedRight(rightMotor, defaultSpeed + 30);
         speedLeft(leftMotor, defaultSpeed);
-    } else {
+    }
+    if (valRight> valLeft){
         speedLeft(leftMotor, defaultSpeed + 30);
         speedRight(rightMotor, defaultSpeed);
     }
@@ -120,12 +122,14 @@ void followLine() {
 
 void moveToJunction() {
     followLine();
+    Serial.println("test");
     valLeft = digitalRead(leftLS);
     valRight = digitalRead(rightLS);
-    if (valLeft == 1 || valRight == 1) {
+    if (valLeft == 1 or valRight == 1) {
         speedLeft(0, leftMotor);
         speedRight(0, rightMotor);
-        return(int 1);
+        Serial.println("Junction");
+        return 1;
     }
 }
 
