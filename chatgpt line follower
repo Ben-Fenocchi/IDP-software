@@ -1,0 +1,83 @@
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
+#include "Arduino.h"
+#include "Wire.h"
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
+
+int defaultSpeed = 100;
+int frLS = 6; // front right line sensor
+int flLS = 7; // front left line sensor
+
+int oldSpeed = 0;  // Declare oldSpeed as a global variable
+int valLeft = 0;   // Declare valLeft as a global variable
+int valRight = 0;  // Declare valRight as a global variable
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(frLS, INPUT);
+    pinMode(flLS, INPUT);
+    
+    if (!AFMS.begin()) {
+        Serial.println("Could not find Motor Shield. Check wiring.");
+        while (1);
+    }
+    Serial.println("Motor Shield found.");
+}
+
+void loop() {
+    setMotorSpeed(leftMotor, 255);
+    setMotorSpeed(rightMotor, 255);
+}
+
+void setMotorSpeed(Adafruit_DCMotor *motorName, int speed) {
+    if (speed == oldSpeed) {
+        return;
+    } else {
+        if (speed < 0) {
+            motorName->run(BACKWARD);
+            motorName->setSpeed(speed * -1);
+        } else {
+            motorName->run(FORWARD);
+            motorName->setSpeed(speed);
+        }
+        oldSpeed = speed;
+    }
+}
+
+void followLine() {
+    int valLeft = digitalRead(flLS);
+    int valRight = digitalRead(frLS);
+    if (valLeft > valRight) {
+        setMotorSpeed(rightMotor, defaultSpeed + 3);
+        setMotorSpeed(leftMotor, defaultSpeed);
+    } else {
+        setMotorSpeed(leftMotor, defaultSpeed + 3);
+        setMotorSpeed(rightMotor, defaultSpeed);
+    }
+}
+
+void moveToJunction() {
+    followLine();
+    valLeft = digitalRead(flLS);
+    valRight = digitalRead(frLS);
+    if (valLeft == 1 || valRight == 1) {
+        // Use return without arguments
+        return;
+        setMotorSpeed(0, leftMotor);
+        setMotorSpeed(0, rightMotor);
+    }
+}
+
+void leftTurn() {
+    setMotorSpeed(leftMotor, -50);
+    setMotorSpeed(rightMotor, 50);
+}
+
+void rightTurn() {
+    setMotorSpeed(rightMotor, -50);
+    setMotorSpeed(leftMotor, 50);
+}
