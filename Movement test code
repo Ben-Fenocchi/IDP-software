@@ -1,0 +1,100 @@
+//libraries for motor control (I havent downloaded any of these)
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);//1 is the port on the motor shield the motor is connected to
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
+
+int defaultSpeed = 100; //default speed for the motors to spin at (0-255)
+int frLS = 6; // front right line sensor
+int flLS = 7; //front left line sensor
+
+void setup(){
+    //serial allows the arduino board to communicate with the computer
+    Serial.begin(9600); //select the baud rate "9600" in the tool bar on arduino IDE
+    
+    pinMode(frLS,INPUT);
+    pinMode(flLS,INPUT);
+    
+
+    // tries to start AFMS, if not pauses program in a while loop and prints error message
+    if (!AFMS.begin()) {    
+        Serial.println("Could not find Motor Shield. Check wiring.");
+        while (1);
+    }
+    Serial.println("Motor Shield found.");
+
+
+
+}
+
+void loop(){
+    setMotorSpeed(leftMotor,255);
+    setMotorSpeed(rightMotor,255);
+
+
+}
+
+void setMotorSpeed(speed,motorName){  //sets speed of motor, 
+    if (speed == oldSpeed){//check if speed different to reduce potential traffic
+        return;
+    }
+    else {
+        //sets the direction and speed, 0 is off, 255 is max
+        if (speed <0 ){
+            motorName->run(BACKWARD);
+            motorName -> setSpeed(speed*-1);
+        }
+        else{
+            motorName->run(FORWARD);
+            motorName -> setSpeed(speed);
+        }
+        oldSpeed = speed;
+    }
+}
+
+
+
+void followLine(){
+    int valLeft = digitalRead(flLS);
+    int valRight = digitalRead(frRS);
+    if (valLeft> valRight){ //if left sensor is on white line but left isnt
+        setMotorSpeed((defaultMotorSpeed + 3), rightMotor); // spin the right motor faster to correct for this
+        setMotorSpeed(defaultMotorSpeed, leftMotor);
+    }
+    else{
+        setMotorSpeed((defaultMotorSpeed + 3), leftMotor);
+        setMotorSpeed(defaultMotorSpeed, rightMotor);
+    }
+}
+
+
+//If we move to a junction and then kill the motors, if the car stops with the line sensors on the junction, when we run the next
+void moveToJunction(){
+    followLine();
+    valLeft = digitalRead(leftLS);
+    valRight = digitalRead(rightLS);
+    if(valLeft == 1 or valRight== 1){
+        return("junction")
+        setMotorSpeed(0,leftMotor)
+        setMotorSpeed(0,rightMotor)
+    }
+}
+
+
+void leftTurn(){
+    setMotorSpeed(-50, leftMotor);
+    setMotorSpeed(50,rightMotor);
+
+}
+
+void rightTurn(){
+    setMotorSpeed(-50, rightMotor);
+    setMotorSpeed(50,leftMotor);
+    
+}
