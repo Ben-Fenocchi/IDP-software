@@ -11,6 +11,7 @@ Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);//1 is the port on the motor shie
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
 
 int defaultSpeed = 100; //default speed for the motors to spin at (0-255)
+int oldSpeed = 0;
 int frLS = 6; // front right line sensor
 int flLS = 7; //front left line sensor
 
@@ -40,7 +41,7 @@ void loop(){
 
 }
 
-void setMotorSpeed(speed,motorName){  //sets speed of motor, 
+void setMotorSpeed(int speed,std motorName){  //sets speed of motor, 
     if (speed == oldSpeed){//check if speed different to reduce potential traffic
         return;
     }

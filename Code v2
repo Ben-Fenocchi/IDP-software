@@ -1,0 +1,151 @@
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+
+/*
+//tof setup
+DFRobot_VL53L0X tofSensor;
+
+//ultrasound setup
+#define MAX_RANG (520)
+#define ADC_SOLUTION (1023.0)
+*/
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
+
+
+
+//int sideSensor = A0;//ultrasound sensor
+int frLS = 6; // front right line sensor
+int flLS = 7; // front left line sensor
+int leftLS = 8;// left side line sensor
+int rightLS = 9;// right side line sensor
+
+/*
+int reading //defined to use later as the tof reading variable
+float dist_t, sensity_t;//for the ultrasound sensor
+*/
+int defaultSpeed = 100;
+int oldSpeedLeft = 0;  // Declare oldSpeed as a global variable
+int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
+int valLeft = 0;   // Declare valLeft as a global variable
+int valRight = 0;  // Declare valRight as a global variable
+
+void setup() {
+    Serial.begin(9600);
+    /*
+    pinMode(sideSensor, INPUT); // the ultrasound sensor
+    */
+    pinMode(frLS, INPUT);
+    pinMode(flLS, INPUT);
+    pinMode(leftLS, INPUT);
+    pinMode(rightLS, INPUT);
+    
+    if (!AFMS.begin()) {
+        Serial.println("Could not find Motor Shield. Check wiring.");
+        while (1);
+    }
+    Serial.println("Motor Shield found.");
+}
+
+void loop() {
+
+  speedRight(rightMotor, defaultSpeed);
+  speedLeft(leftMotor, defaultSpeed);
+
+  if (moveToJunction()==1){
+    Serial.println("We have found the junction!");
+  }
+  
+}
+
+
+
+
+
+
+
+
+void speedLeft(Adafruit_DCMotor *motorName, int speed) {
+    speed = speed *-1;
+    if (speed == oldSpeedLeft) {
+        return;
+        
+    } else {
+        if (speed < 0) {
+            motorName->run(BACKWARD);
+            motorName->setSpeed(speed * -1);
+        } else {
+            motorName->run(FORWARD);
+            motorName->setSpeed(speed);
+        }
+        oldSpeedLeft = speed;
+    }
+}
+void speedRight(Adafruit_DCMotor *motorName, int speed) {
+  speed = speed *-1;
+    if (speed == oldSpeedRight) {
+        return;
+        
+    } else {
+        if (speed < 0) {
+            motorName->run(BACKWARD);
+            motorName->setSpeed(speed * -1);
+        } else {
+            motorName->run(FORWARD);
+            motorName->setSpeed(speed);
+        }
+        oldSpeedRight = speed;
+    }
+}
+
+
+
+void followLine() {
+    int valLeft = digitalRead(flLS);
+    int valRight = digitalRead(frLS);
+    if (valLeft > valRight) {
+        speedRight(rightMotor, defaultSpeed + 30);
+        speedLeft(leftMotor, defaultSpeed);
+    } else {
+        speedLeft(leftMotor, defaultSpeed + 30);
+        speedRight(rightMotor, defaultSpeed);
+    }
+}
+
+void moveToJunction() {
+    followLine();
+    valLeft = digitalRead(leftLS);
+    valRight = digitalRead(rightLS);
+    if (valLeft == 1 || valRight == 1) {
+        speedLeft(0, leftMotor);
+        speedRight(0, rightMotor);
+        return(int 1);
+    }
+}
+
+void leftTurn() {
+    speedLeft(leftMotor, -50);
+    speedRight(rightMotor, 50);
+}
+
+void rightTurn() {
+    speedRight(rightMotor, -50);
+    speedLeft(leftMotor, 50);
+}
+
+/*
+void checkForBlockDownwards(){
+    reading = tofSensor.getDistance();
+    //
+}
+*/
+
+//values for the tof sensor when touching cubes
+//46 dense
+//58 less dense
