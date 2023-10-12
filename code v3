@@ -1,0 +1,209 @@
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+
+struct Node {
+  int data;
+  Node * next;
+};
+
+Node* myList = nullptr;
+
+void appendToList(int value){
+  Node * newNode = new Node;
+  newNode->data = value;
+  newNode->next = myList;
+  myList = newNode; 
+}
+
+void removeFromList() {
+  if (myList != nullptr) {
+    Node* temp = myList;
+    myList = myList->next;
+    delete temp;
+  }
+}
+
+/*
+//tof setup
+DFRobot_VL53L0X tofSensor;
+
+//ultrasound setup
+#define MAX_RANG (520)
+#define ADC_SOLUTION (1023.0)
+*/
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
+
+//path to follow,  0 for a right, 1 for a left turn,2 for straight
+int dynamicArrapath[] = {2,0,2,1,2,1,1,2,1,2,2};
+int turning[] = {1,0,1,4};//4 to check for end of list
+
+//int sideSensor = A0;//ultrasound sensor
+int frLS = 6; // front right line sensor
+int flLS = 5; // front left line sensor
+int leftLS = 4;// left side line sensor
+int rightLS = 7;// right side line sensor
+
+/*
+int reading //defined to use later as the tof reading variable
+float dist_t, sensity_t;//for the ultrasound sensor
+*/
+int defaultSpeed = 180;
+int oldSpeedLeft = 0;  // Declare oldSpeed as a global variable
+int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
+int valLeft = 0;   // Declare valLeft as a global variable
+int valRight = 0;  // Declare valRight as a global variable
+
+void setup() {
+    Serial.begin(9600);
+    /*
+    pinMode(sideSensor, INPUT); // the ultrasound sensor
+    */
+    pinMode(frLS, INPUT);
+    pinMode(flLS, INPUT);
+    pinMode(leftLS, INPUT);
+    pinMode(rightLS, INPUT);
+
+    appendToList(1);
+    appendToList(0);
+    appendToList(1);
+
+    if (!AFMS.begin()) {
+        Serial.println("Could not find Motor Shield. Check wiring.");
+        while (1);
+    }
+    //Serial.println("Motor Shield found.");
+}
+
+
+
+void speedLeft(Adafruit_DCMotor *motorName, int speed) {
+    speed = speed *-1;
+    if (speed == oldSpeedLeft) {
+        return;
+        
+    } else {
+        if (speed < 0) {
+            motorName->run(BACKWARD);
+            motorName->setSpeed(speed * -1);
+        } else {
+            motorName->run(FORWARD);
+            motorName->setSpeed(speed);
+        }
+        oldSpeedLeft = speed;
+    }
+}
+void speedRight(Adafruit_DCMotor *motorName, int speed) {
+  speed = speed *-1;
+    if (speed == oldSpeedRight) {
+        return;
+        
+    } else {
+        if (speed < 0) {
+            motorName->run(BACKWARD);
+            motorName->setSpeed(speed * -1);
+        } else {
+            motorName->run(FORWARD);
+            motorName->setSpeed(speed);
+        }
+        oldSpeedRight = speed;
+    }
+}
+
+
+
+void followLine() {
+    int valLeft = digitalRead(flLS);
+    int valRight = digitalRead(frLS);
+    if (valLeft > valRight) {
+        speedRight(rightMotor, defaultSpeed);
+        speedLeft(leftMotor, defaultSpeed+30);
+    }
+    if (valRight> valLeft){
+        speedLeft(leftMotor, defaultSpeed);
+        speedRight(rightMotor, defaultSpeed+30);
+    }
+}
+
+void moveToJunction() {
+    followLine();
+    //Serial.println("test");
+    valLeft = digitalRead(leftLS);
+    Serial.println(valLeft);
+    //valRight = digitalRead(rightLS);
+    if (valLeft == 1) {
+        Serial.println("Junction");
+        speedLeft(0, leftMotor);
+        speedRight(0, rightMotor);
+        delay(5000);
+
+        
+        return 1;
+    }
+}
+
+void leftTurn() {
+    int val = digitalRead(leftLS);
+    //int turningCopy[] = turning;//shallow copy of list to edit
+    speedLeft(leftMotor, -50);
+    speedRight(rightMotor, 50);
+    //while (turning[0] != 4) {//have not found all the lines necessary for a LH turn
+    //    int val = digitalRead(leftLS);
+    //    if (turning[0]==val){
+    //        turning.pop.front();
+    //    }
+    //}
+
+    while (myList != nullptr && myList->data != 1){
+      removeFromList();
+    }
+
+    Serial.println("turn finished");
+    speedLeft(leftMotor,defaultSpeed);
+    speedRight(rightMotor,defaultSpeed);
+}
+
+void rightTurn() {
+    speedRight(rightMotor, -50);
+    speedLeft(leftMotor, 50);
+}
+
+/*
+void checkForBlockDownwards(){
+    reading = tofSensor.getDistance();
+    //
+}
+*/
+
+//values for the tof sensor when touching cubes
+//46 dense
+//58 less dense
+
+
+
+
+
+
+
+void loop() {
+  
+  speedRight(rightMotor, defaultSpeed);
+  speedLeft(leftMotor, defaultSpeed);
+
+  moveToJunction();
+  }
+  
+
+
+
+
+
+
+
+
