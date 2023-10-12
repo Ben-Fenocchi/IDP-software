@@ -5,6 +5,28 @@
 #include "Wire.h"
 #include "DFRobot_VL53L0X.h"
 
+struct Node {
+  int data;
+  Node * next;
+};
+
+Node* myList = nullptr;
+
+void appendToList(int value){
+  Node * newNode = new Node;
+  newNode->data = value;
+  newNode->next = myList;
+  myList = newNode; 
+}
+
+void removeFromList() {
+  if (myList != nullptr) {
+    Node* temp = myList;
+    myList = myList->next;
+    delete temp;
+  }
+}
+
 /*
 //tof setup
 DFRobot_VL53L0X tofSensor;
@@ -18,13 +40,15 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
 
-
+//path to follow,  0 for a right, 1 for a left turn,2 for straight
+int dynamicArrapath[] = {2,0,2,1,2,1,1,2,1,2,2};
+int turning[] = {1,0,1,4};//4 to check for end of list
 
 //int sideSensor = A0;//ultrasound sensor
-int frLS = 7; // front right line sensor
-int flLS = 6; // front left line sensor
-int leftLS = 4;// left side line sensor
-int rightLS = 5;// right side line sensor
+int frLS = 5; // front right line sensor
+int flLS = 2; // front left line sensor
+int leftLS = 3;// left side line sensor
+int rightLS = 4;// right side line sensor
 
 /*
 int reading //defined to use later as the tof reading variable
@@ -45,7 +69,11 @@ void setup() {
     pinMode(flLS, INPUT);
     pinMode(leftLS, INPUT);
     pinMode(rightLS, INPUT);
-    
+
+    appendToList(1);
+    appendToList(0);
+    appendToList(1);
+
     if (!AFMS.begin()) {
         Serial.println("Could not find Motor Shield. Check wiring.");
         while (1);
@@ -134,8 +162,24 @@ void moveToJunction() {
 }
 
 void leftTurn() {
+    int val = digitalRead(leftLS);
+    //int turningCopy[] = turning;//shallow copy of list to edit
     speedLeft(leftMotor, -50);
     speedRight(rightMotor, 50);
+    //while (turning[0] != 4) {//have not found all the lines necessary for a LH turn
+    //    int val = digitalRead(leftLS);
+    //    if (turning[0]==val){
+    //        turning.pop.front();
+    //    }
+    //}
+
+    while (myList != nullptr && myList->data != 1){
+      removeFromList();
+    }
+
+    Serial.println("turn finished");
+    speedLeft(motorLeft,defaultSpeed);
+    speedRight(motorRight,defaultSpeed);
 }
 
 void rightTurn() {
