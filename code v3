@@ -5,13 +5,16 @@
 #include "Wire.h"
 #include "DFRobot_VL53L0X.h"
 
+//lets us use arrays
 struct Node {
   int data;
   Node * next;
 };
 
+//initialises the list myList
 Node* myList = nullptr;
 
+//fuction to add to list
 void appendToList(int value){
   Node * newNode = new Node;
   newNode->data = value;
@@ -19,6 +22,7 @@ void appendToList(int value){
   myList = newNode; 
 }
 
+//function to remove from list
 void removeFromList() {
   if (myList != nullptr) {
     Node* temp = myList;
@@ -45,16 +49,17 @@ int dynamicArrapath[] = {2,0,2,1,2,1,1,2,1,2,2};
 int turning[] = {1,0,1,4};//4 to check for end of list
 
 //int sideSensor = A0;//ultrasound sensor
-int frLS = 6; // front right line sensor
-int flLS = 5; // front left line sensor
-int leftLS = 4;// left side line sensor
-int rightLS = 7;// right side line sensor
-
+int frLS = 5; // front right line sensor
+int flLS = 2; // front left line sensor
+int leftLS = 3;// left side line sensor
+int rightLS = 4;// right side line sensor
+int redLED =12;
+int greenLED = 13;
 /*
 int reading //defined to use later as the tof reading variable
 float dist_t, sensity_t;//for the ultrasound sensor
 */
-int defaultSpeed = 180;
+int defaultSpeed = 80;
 int oldSpeedLeft = 0;  // Declare oldSpeed as a global variable
 int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
 int valLeft = 0;   // Declare valLeft as a global variable
@@ -70,9 +75,14 @@ void setup() {
     pinMode(leftLS, INPUT);
     pinMode(rightLS, INPUT);
 
+    pinMode(redLED, OUTPUT);
+    pinMode(greenLED,OUTPUT);
+
+    //list for the turning
     appendToList(1);
     appendToList(0);
     appendToList(1);
+    //appendToList(0);
 
     if (!AFMS.begin()) {
         Serial.println("Could not find Motor Shield. Check wiring.");
@@ -92,11 +102,15 @@ void speedLeft(Adafruit_DCMotor *motorName, int speed) {
         if (speed < 0) {
             motorName->run(BACKWARD);
             motorName->setSpeed(speed * -1);
+            
         } else {
             motorName->run(FORWARD);
             motorName->setSpeed(speed);
+            
         }
         oldSpeedLeft = speed;
+
+  
     }
 }
 void speedRight(Adafruit_DCMotor *motorName, int speed) {
@@ -113,6 +127,7 @@ void speedRight(Adafruit_DCMotor *motorName, int speed) {
             motorName->setSpeed(speed);
         }
         oldSpeedRight = speed;
+  
     }
 }
 
@@ -123,45 +138,49 @@ void followLine() {
     int valRight = digitalRead(frLS);
     if (valLeft > valRight) {
         speedRight(rightMotor, defaultSpeed);
-        speedLeft(leftMotor, defaultSpeed+30);
+        speedLeft(leftMotor, defaultSpeed+40);
     }
     if (valRight> valLeft){
         speedLeft(leftMotor, defaultSpeed);
-        speedRight(rightMotor, defaultSpeed+30);
+        speedRight(rightMotor, defaultSpeed+40);
     }
 }
 
 void moveToJunction() {
     followLine();
-    //Serial.println("test");
-    valLeft = digitalRead(leftLS);
-    Serial.println(valLeft);
-    //valRight = digitalRead(rightLS);
-    if (valLeft == 1) {
+    if (digitalRead(leftLS)) {
         Serial.println("Junction");
-        speedLeft(0, leftMotor);
-        speedRight(0, rightMotor);
-        delay(5000);
+        speedLeft(leftMotor, 1);
+        speedRight(rightMotor,1);
+        //delay(3000);
+        //speedLeft(leftMotor, 1);
 
-        
-        return 1;
+        Serial.println("pause done");
+        leftTurn();
+   
+    
     }
 }
 
 void leftTurn() {
-    int val = digitalRead(leftLS);
-    //int turningCopy[] = turning;//shallow copy of list to edit
-    speedLeft(leftMotor, -50);
-    speedRight(rightMotor, 50);
-    //while (turning[0] != 4) {//have not found all the lines necessary for a LH turn
-    //    int val = digitalRead(leftLS);
-    //    if (turning[0]==val){
-    //        turning.pop.front();
-    //    }
-    //}
 
-    while (myList != nullptr && myList->data != 1){
-      removeFromList();
+    speedLeft(leftMotor, -50);
+    speedRight(rightMotor, 75);
+    //Serial.println(str(myList->data));
+    delay(3000);
+
+    while (myList != nullptr){//while list not empty
+      //Serial.println("hello");
+      if (digitalRead(leftLS)==myList->data){
+        removeFromList();
+        Serial.println("test");
+      }
+    // resetting the turning list
+
+    appendToList(1);
+    appendToList(0);
+    appendToList(1);
+    //appendToList(0);
     }
 
     Serial.println("turn finished");
@@ -195,7 +214,7 @@ void loop() {
   
   speedRight(rightMotor, defaultSpeed);
   speedLeft(leftMotor, defaultSpeed);
-
+  
   moveToJunction();
   }
   
