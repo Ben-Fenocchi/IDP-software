@@ -11,54 +11,58 @@ struct Node {
   Node * next;
 };
 
-//initialises the list myList
-Node* myList = nullptr;
+//initialises the list turningList and turnsList
+Node* turningList = nullptr; //holds the details for a turn
+Node* pathListBig = nullptr; //holds the list of turns in order to make
+Node* ultraListBig = nullptr;//holds list of ultrasonic distances at each point, if no block in way
+
 
 //fuction to add to list
-void appendToList(int value){
+void appendToList(int value,listName){
   Node * newNode = new Node;
   newNode->data = value;
-  newNode->next = myList;
-  myList = newNode; 
+  newNode->next = listName;
+  listName = newNode; 
 }
 
 //function to remove from list
-void removeFromList() {
-  if (myList != nullptr) {
-    Node* temp = myList;
-    myList = myList->next;
+void removeFromList(listName) {
+  if (listName != nullptr) {
+    Node* temp = listName;
+    listName = listName->next;
     delete temp;
   }
 }
 
-/*
+
 //tof setup
 DFRobot_VL53L0X tofSensor;
 
 //ultrasound setup
 #define MAX_RANG (520)
 #define ADC_SOLUTION (1023.0)
-*/
+
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
 
-//path to follow,  0 for a right, 1 for a left turn,2 for straight
-int dynamicArrapath[] = {2,0,2,1,2,1,1,2,1,2,2};
-int turning[] = {1,0,1,4};//4 to check for end of list
+Servo myservo; // create servo object to control a servo
+int servoPos = 0; // variable to store the servo position
+myservo.attach(6); // attaches the servo on pin 6 to the servo object
 
-//int sideSensor = A0;//ultrasound sensor
+
+int sideSensor = A0;//ultrasound sensor
 int frLS = 5; // front right line sensor
 int flLS = 2; // front left line sensor
 int leftLS = 3;// left side line sensor
 int rightLS = 4;// right side line sensor
 int redLED =12;
 int greenLED = 13;
-/*
+
 int reading //defined to use later as the tof reading variable
 float dist_t, sensity_t;//for the ultrasound sensor
-*/
+
 int defaultSpeed = 80;
 int oldSpeedLeft = 0;  // Declare oldSpeed as a global variable
 int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
@@ -67,9 +71,9 @@ int valRight = 0;  // Declare valRight as a global variable
 
 void setup() {
     Serial.begin(9600);
-    /*
+    
     pinMode(sideSensor, INPUT); // the ultrasound sensor
-    */
+    
     pinMode(frLS, INPUT);
     pinMode(flLS, INPUT);
     pinMode(leftLS, INPUT);
@@ -79,16 +83,45 @@ void setup() {
     pinMode(greenLED,OUTPUT);
 
     //list for the turning
-    appendToList(1);
-    appendToList(0);
-    appendToList(1);
-    //appendToList(0);
+    appendToList(1,turningList);
+    appendToList(0,turningList);
+    appendToList(1,turningList);
+    //appendToList(0,turningList);
+
+    //list for pathways
+    //path to follow,  0 for a right, 1 for a left turn,2 for straight
+    appendToList(2,pathListBig);
+    appendToList(0,pathListBig);
+    appendToList(2,pathListBig);
+    appendToList(1,pathListBig);
+    appendToList(2,pathListBig);
+    appendToList(1,pathListBig);
+    appendToList(1,pathListBig);
+    appendToList(2,pathListBig);
+    appendToList(1,pathListBig);
+    appendToList(2,pathListBig);
+    appendToList(2,pathListBig);
+
+    //list for ultrasonic values for after each junction turn
+    //values: 52, 165, 165, 211, 211, 210, 211, 211, 165, 165, 165
+    appendToList(52,ultraListBig);
+    appendToList(165,ultraListBig);
+    appendToList(165,ultraListBig);
+    appendToList(211,ultraListBig);
+    appendToList(211,ultraListBig);
+    appendToList(210,ultraListBig);
+    appendToList(211,ultraListBig);
+    appendToList(211,ultraListBig);
+    appendToList(165,ultraListBig);
+    appendToList(165,ultraListBig);
+    appendToList(165,ultraListBig);
+
 
     if (!AFMS.begin()) {
         Serial.println("Could not find Motor Shield. Check wiring.");
         while (1);
     }
-    //Serial.println("Motor Shield found.");
+    Serial.println("Motor Shield found.");
 }
 
 
@@ -152,13 +185,23 @@ void moveToJunction() {
         Serial.println("Junction");
         speedLeft(leftMotor, 1);
         speedRight(rightMotor,1);
-        //delay(3000);
-        //speedLeft(leftMotor, 1);
-
-        Serial.println("pause done");
-        leftTurn();
-   
-    
+        if (pathListBig->data == 1){
+            leftTurn();
+            removeFromList(pathListBig);
+            delay(1000);
+        }
+        elif (pathListBig->data == 0){
+            rightTurn();
+            removeFromList(pathListBig);
+            delay(1000);//delay to make sure the car can get off the junction so it doesnt stay at the same one and keep turning
+        }
+        else{
+            speedLeft(leftMotor, defaultSpeed);
+            speedRight(rightMotor,defaultSpeed);
+            removeFromList(pathListBig);
+            delay(1000);
+        }
+        
     }
 }
 
@@ -166,26 +209,26 @@ void leftTurn() {
 
     speedLeft(leftMotor, -50);
     speedRight(rightMotor, 75);
-    //Serial.println(str(myList->data));
     delay(3000);
 
-    while (myList != nullptr){//while list not empty
-      //Serial.println("hello");
-      if (digitalRead(leftLS)==myList->data){
-        removeFromList();
-        Serial.println("test");
+    while (turningList != nullptr){//while list not empty
+     
+      if (digitalRead(leftLS)==turningList->data){
+        removeFromList(turningList);
+        
       }
     // resetting the turning list
 
-    appendToList(1);
-    appendToList(0);
-    appendToList(1);
-    //appendToList(0);
+    appendToList(1,turningList);
+    appendToList(0,turningList);
+    appendToList(1,turningList);
+    //appendToList(0,turningList);
     }
 
     Serial.println("turn finished");
     speedLeft(leftMotor,defaultSpeed);
     speedRight(rightMotor,defaultSpeed);
+
 }
 
 void rightTurn() {
@@ -193,19 +236,27 @@ void rightTurn() {
     speedLeft(leftMotor, 50);
 }
 
-/*
+
 void checkForBlockDownwards(){
+    //values for the tof sensor when touching cubes
+    //46 dense
+    //58 less dense
     reading = tofSensor.getDistance();
-    //
+    if (reading < 30){
+        Serial.println("Block");
+        blockBurglar();
+    }
+    
 }
-*/
+//to trap the block in the cage
+void blockBurglar(){
+    // goes from 0 degrees to 180 degrees in steps of 1 degree
+    for (pos = 0; pos <= 180; pos += 1) { 
+        myservo.write(pos); // tell servo to go to position in variable 'pos'
+        delay(15); // waits 15 ms for the servo to reach the position
+    }
 
-//values for the tof sensor when touching cubes
-//46 dense
-//58 less dense
-
-
-
+}
 
 
 
@@ -214,7 +265,6 @@ void loop() {
   
   speedRight(rightMotor, defaultSpeed);
   speedLeft(leftMotor, defaultSpeed);
-  
   moveToJunction();
   }
   
