@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "DFRobot_VL53L0X.h"
+#include <Servo.h>
 
 //lets us use arrays
 struct Node {
@@ -18,7 +19,7 @@ Node* ultraListBig = nullptr;//holds list of ultrasonic distances at each point,
 
 
 //fuction to add to list
-void appendToList(int value,listName){
+void appendToList(int value,Node *listName){
   Node * newNode = new Node;
   newNode->data = value;
   newNode->next = listName;
@@ -26,7 +27,7 @@ void appendToList(int value,listName){
 }
 
 //function to remove from list
-void removeFromList(listName) {
+void removeFromList(Node *listName) {
   if (listName != nullptr) {
     Node* temp = listName;
     listName = listName->next;
@@ -47,9 +48,8 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
 
-Servo myservo; // create servo object to control a servo
+Servo myServo; // create servo object to control a servo
 int servoPos = 0; // variable to store the servo position
-myservo.attach(6); // attaches the servo on pin 6 to the servo object
 
 
 int sideSensor = A0;//ultrasound sensor
@@ -60,8 +60,8 @@ int rightLS = 4;// right side line sensor
 int redLED =12;
 int greenLED = 13;
 
-int reading //defined to use later as the tof reading variable
-float dist_t, sensity_t;//for the ultrasound sensor
+int reading; //defined to use later as the tof reading variable
+float dist_t, float sensity_t;//for the ultrasound sensor
 
 int defaultSpeed = 80;
 int oldSpeedLeft = 0;  // Declare oldSpeed as a global variable
@@ -81,6 +81,9 @@ void setup() {
 
     pinMode(redLED, OUTPUT);
     pinMode(greenLED,OUTPUT);
+
+    myServo.attach(6); // attaches the servo on pin 6 to the servo object
+
 
     //list for the turning
     appendToList(1,turningList);
@@ -190,7 +193,7 @@ void moveToJunction() {
             removeFromList(pathListBig);
             delay(1000);
         }
-        elif (pathListBig->data == 0){
+        else if (pathListBig->data == 0){
             rightTurn();
             removeFromList(pathListBig);
             delay(1000);//delay to make sure the car can get off the junction so it doesnt stay at the same one and keep turning
@@ -271,8 +274,8 @@ void checkForBlockDownwards(){
 //to trap the block in the cage
 void blockBurglar(){
     // goes from 0 degrees to 180 degrees in steps of 1 degree
-    for (pos = 0; pos <= 180; pos += 1) { 
-        myservo.write(pos); // tell servo to go to position in variable 'pos'
+    for (servoPos = 0; servoPos <= 180; servoPos += 1) { 
+        myServo.write(servoPos); // tell servo to go to position in variable 'pos'
         delay(15); // waits 15 ms for the servo to reach the position
     }
 
