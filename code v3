@@ -234,6 +234,26 @@ void leftTurn() {
 void rightTurn() {
     speedRight(rightMotor, -50);
     speedLeft(leftMotor, 50);
+
+    delay(3000);
+
+    while (turningList != nullptr){//while list not empty
+     
+      if (digitalRead(leftLS)==turningList->data){
+        removeFromList(turningList);
+        
+      }
+    // resetting the turning list
+
+    appendToList(1,turningList);
+    appendToList(0,turningList);
+    appendToList(1,turningList);
+    //appendToList(0,turningList);
+    }
+
+    Serial.println("turn finished");
+    speedLeft(leftMotor,defaultSpeed);
+    speedRight(rightMotor,defaultSpeed);
 }
 
 
