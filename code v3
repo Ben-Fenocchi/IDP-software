@@ -19,18 +19,50 @@ Node* ultraListBig = nullptr;//holds list of ultrasonic distances at each point,
 
 
 //fuction to add to list
-void appendToList(int value,Node *listName){
+void appendToBigList(int value){
   Node * newNode = new Node;
   newNode->data = value;
-  newNode->next = listName;
-  listName = newNode; 
+  newNode->next = pathListBig;
+  pathListBig = newNode; 
 }
 
 //function to remove from list
-void removeFromList(Node *listName) {
-  if (listName != nullptr) {
-    Node* temp = listName;
-    listName = listName->next;
+void removeFromBigList() {
+  if (pathListBig != nullptr) {
+    Node* temp = pathListBig;
+    pathListBig = pathListBig->next;
+    delete temp;
+  }
+}
+
+void appendToTurningList(int value){
+  Node * newNode = new Node;
+  newNode->data = value;
+  newNode->next = turningList;
+  turningList = newNode; 
+}
+
+//function to remove from list
+void removeFromTurningList() {
+  if (turningList != nullptr) {
+    Node* temp = turningList;
+    turningList = turningList->next;
+    delete temp;
+  }
+}
+
+void appendToUltraListBig(int value){
+  Node * newNode = new Node;
+  newNode->data = value;
+  newNode->next = ultraListBig;
+  ultraListBig = newNode; 
+}
+
+//function to remove from list
+void removeFromUltraListBig() {
+  if (ultraListBig != nullptr) {
+    Node* temp = ultraListBig;
+    ultraListBig = ultraListBig->next;
     delete temp;
   }
 }
@@ -61,9 +93,9 @@ int redLED =12;
 int greenLED = 13;
 
 int reading; //defined to use later as the tof reading variable
-float dist_t, float sensity_t;//for the ultrasound sensor
+float dist_t, sensity_t;//for the ultrasound sensor
 
-int defaultSpeed = 80;
+int defaultSpeed = 180;
 int oldSpeedLeft = 0;  // Declare oldSpeed as a global variable
 int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
 int valLeft = 0;   // Declare valLeft as a global variable
@@ -86,38 +118,38 @@ void setup() {
 
 
     //list for the turning
-    appendToList(1,turningList);
-    appendToList(0,turningList);
-    appendToList(1,turningList);
+    appendToTurningList(1);
+    appendToTurningList(0);
+    appendToTurningList(1);
     //appendToList(0,turningList);
 
     //list for pathways
-    //path to follow,  0 for a right, 1 for a left turn,2 for straight
-    appendToList(2,pathListBig);
-    appendToList(0,pathListBig);
-    appendToList(2,pathListBig);
-    appendToList(1,pathListBig);
-    appendToList(2,pathListBig);
-    appendToList(1,pathListBig);
-    appendToList(1,pathListBig);
-    appendToList(2,pathListBig);
-    appendToList(1,pathListBig);
-    appendToList(2,pathListBig);
-    appendToList(2,pathListBig);
+    //path to follow,  0 for a right, 1 for a left turn,2 for straight//N.B append function adds to the start of the list
+    appendToBigList(2);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(0);
+    appendToBigList(2);
 
     //list for ultrasonic values for after each junction turn
     //values: 52, 165, 165, 211, 211, 210, 211, 211, 165, 165, 165
-    appendToList(52,ultraListBig);
-    appendToList(165,ultraListBig);
-    appendToList(165,ultraListBig);
-    appendToList(211,ultraListBig);
-    appendToList(211,ultraListBig);
-    appendToList(210,ultraListBig);
-    appendToList(211,ultraListBig);
-    appendToList(211,ultraListBig);
-    appendToList(165,ultraListBig);
-    appendToList(165,ultraListBig);
-    appendToList(165,ultraListBig);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(211);
+    appendToUltraListBig(211);
+    appendToUltraListBig(210);
+    appendToUltraListBig(211);
+    appendToUltraListBig(211);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(52);
 
 
     if (!AFMS.begin()) {
@@ -173,12 +205,12 @@ void followLine() {
     int valLeft = digitalRead(flLS);
     int valRight = digitalRead(frLS);
     if (valLeft > valRight) {
-        speedRight(rightMotor, defaultSpeed);
-        speedLeft(leftMotor, defaultSpeed+40);
+        speedRight(rightMotor, defaultSpeed+75);
+        speedLeft(leftMotor, defaultSpeed);
     }
     if (valRight> valLeft){
-        speedLeft(leftMotor, defaultSpeed);
-        speedRight(rightMotor, defaultSpeed+40);
+        speedLeft(leftMotor, defaultSpeed+75);
+        speedRight(rightMotor, defaultSpeed);
     }
 }
 
@@ -188,20 +220,23 @@ void moveToJunction() {
         Serial.println("Junction");
         speedLeft(leftMotor, 1);
         speedRight(rightMotor,1);
+        delay(3000);
+        Serial.println(pathListBig->data);
         if (pathListBig->data == 1){
+            Serial.println("turning");
             leftTurn();
-            removeFromList(pathListBig);
+            removeFromBigList();
             delay(1000);
         }
         else if (pathListBig->data == 0){
             rightTurn();
-            removeFromList(pathListBig);
+            removeFromBigList();
             delay(1000);//delay to make sure the car can get off the junction so it doesnt stay at the same one and keep turning
         }
         else{
             speedLeft(leftMotor, defaultSpeed);
             speedRight(rightMotor,defaultSpeed);
-            removeFromList(pathListBig);
+            removeFromBigList();
             delay(1000);
         }
         
@@ -210,21 +245,21 @@ void moveToJunction() {
 
 void leftTurn() {
 
-    speedLeft(leftMotor, -50);
-    speedRight(rightMotor, 75);
+    speedLeft(leftMotor, -100);
+    speedRight(rightMotor, 100);
     delay(3000);
 
     while (turningList != nullptr){//while list not empty
      
       if (digitalRead(leftLS)==turningList->data){
-        removeFromList(turningList);
+        removeFromTurningList();
         
       }
     // resetting the turning list
 
-    appendToList(1,turningList);
-    appendToList(0,turningList);
-    appendToList(1,turningList);
+    appendToTurningList(1);
+    appendToTurningList(0);
+    appendToTurningList(1);
     //appendToList(0,turningList);
     }
 
@@ -235,22 +270,22 @@ void leftTurn() {
 }
 
 void rightTurn() {
-    speedRight(rightMotor, -50);
-    speedLeft(leftMotor, 50);
+    speedRight(rightMotor, -100);
+    speedLeft(leftMotor, 100);
 
     delay(3000);
 
     while (turningList != nullptr){//while list not empty
      
       if (digitalRead(leftLS)==turningList->data){
-        removeFromList(turningList);
+        removeFromTurningList();
         
       }
     // resetting the turning list
 
-    appendToList(1,turningList);
-    appendToList(0,turningList);
-    appendToList(1,turningList);
+    appendToTurningList(1);
+    appendToTurningList(0);
+    appendToTurningList(1);
     //appendToList(0,turningList);
     }
 
@@ -285,7 +320,7 @@ void blockBurglar(){
 
 
 void loop() {
-  
+  Serial.println(pathListBig->data);
   speedRight(rightMotor, defaultSpeed);
   speedLeft(leftMotor, defaultSpeed);
   moveToJunction();
