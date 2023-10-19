@@ -233,7 +233,6 @@ void moveToJunction() {
             delay(1000);
         }
         else if (pathListBig->data == 0){
-            Serial.println("Turning right");
             rightTurn();
             removeFromBigList();
             delay(1000);//delay to make sure the car can get off the junction so it doesnt stay at the same one and keep turning
@@ -275,14 +274,14 @@ void leftTurn() {
 }
 
 void rightTurn() {
+    speedRight(rightMotor, 100);
+    speedLeft(leftMotor, -100);
 
-
-
+    delay(3000);
 
     while (turningList != nullptr){//while list not empty
-      speedRight(rightMotor, 100);
-      speedLeft(leftMotor, -100);
-      if (digitalRead(leftLS)==turningList->data){
+      Serial.println("Turning right");
+      if (digitalRead(rightLS)==turningList->data){
         removeFromTurningList();
         Serial.println("Stage complete");
         
@@ -298,7 +297,6 @@ void rightTurn() {
     Serial.println("turn finished");
     speedLeft(leftMotor,defaultSpeed);
     speedRight(rightMotor,defaultSpeed);
-    delay(3000);
 }
 
 
