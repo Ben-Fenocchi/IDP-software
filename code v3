@@ -91,6 +91,7 @@ int leftLS = 3;// left side line sensor
 int rightLS = 4;// right side line sensor
 int redLED =12;
 int greenLED = 13;
+int resetButton =7;
 
 int reading; //defined to use later as the tof reading variable
 float dist_t, sensity_t;//for the ultrasound sensor
@@ -113,6 +114,8 @@ void setup() {
 
     pinMode(redLED, OUTPUT);
     pinMode(greenLED,OUTPUT);
+
+    pinMode(resetButton,INPUT);
 
     myServo.attach(6); // attaches the servo on pin 6 to the servo object
 
@@ -324,10 +327,58 @@ void blockBurglar(){
 }
 
 
+void reset(){
+    speedLeft(leftMotor,defaultSpeed);
+    speedRight(rightMotor,defaultSpeed);
+
+    //emptying the lists
+    while (turningList != nullptr){
+      removeFromTurningList();
+    }
+    while (pathListBig != nullptr){
+      removeFromBigList();
+    }
+    while (ultraListBig != nullptr){
+      removeFromUltraListBig();
+    }
+    //adding the list values back
+    appendToTurningList(1);
+    appendToTurningList(0);
+    appendToTurningList(1);
+
+    appendToBigList(2);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(0);
+    appendToBigList(2);
+
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(211);
+    appendToUltraListBig(211);
+    appendToUltraListBig(210);
+    appendToUltraListBig(211);
+    appendToUltraListBig(211);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(52);
+}
+
 
 
 void loop() {
-  //Serial.println(pathListBig->data);
+  
+  if digitalRead(resetButton){
+    reset();
+  }
+
   speedRight(rightMotor, defaultSpeed);
   speedLeft(leftMotor, defaultSpeed);
   moveToJunction();
