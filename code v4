@@ -82,10 +82,11 @@ int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
 int valLeft = 0;   // Declare valLeft as a global variable
 int valRight = 0;  // Declare valRight as a global variable
 float distanceAfterTurn = 0; // Declare distanceAfterTurn as a global variable
+int defaultSpeed = 180;
 
 //constants
 const int error = 7; // for the error on the ultrasound reading 
-const int defaultSpeed = 180;
+
 
 
 //--------------------------------------------------functions-----------------------------------------
@@ -252,10 +253,9 @@ void retrieveSideBlock(){
 }
 
 void ETgoHome(){
-    //180 degree turn
-    leftTurn();
-    leftTUrn();
     //code to reverse pathways home
+    defualtSpeed = defaultSpeed *-1;
+    
 
 }
 
