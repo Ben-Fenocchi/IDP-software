@@ -13,7 +13,7 @@ struct Node {
 };
 //initialises the list and turnsList
 Node* pathListBig = nullptr; //holds the list of turns in order to make
-Node* ultraListBig = nullptr;//holds list of ultrasonic distances at each point, if no block in way
+
 
 //fuctions to add to lists
 void appendToBigList(int value){
@@ -22,12 +22,7 @@ void appendToBigList(int value){
   newNode->next = pathListBig;
   pathListBig = newNode; 
 }
-void appendToUltraListBig(int value){
-  Node * newNode = new Node;
-  newNode->data = value;
-  newNode->next = ultraListBig;
-  ultraListBig = newNode; 
-}
+
 
 
 //function to remove from list
@@ -38,13 +33,7 @@ void removeFromBigList() {
     delete temp;
   }
 }
-void removeFromUltraListBig() {
-  if (ultraListBig != nullptr) {
-    Node* temp = ultraListBig;
-    ultraListBig = ultraListBig->next;
-    delete temp;
-  }
-}
+
 
 //---------------------------------------Setup for variables-----------------------------------------
 //tof setup
@@ -229,7 +218,25 @@ void retrieveSideBlock(){
     speedRight(rightMotor,0);
     delay(3000);
     Serial.println("blocky uh");
+    //returning to original line
+    while(digitalRead(leftLS)<2){
+        speedLeft(leftMotor,-defaultSpeed);
+        speedRight(rightMotor,-defualtSpeed);
+    }
+    speedLeft(leftMotor,0);
+    speedRight(rightMotor,0);
+    delay(3000);
+    Serial.println("Found old line");
+
 }
+
+void ETgoHome(){
+    //180 degree turn
+    leftTurn();
+    leftTUrn();
+
+}
+
 
 void reset(){
     speedLeft(leftMotor,defaultSpeed);
@@ -239,9 +246,7 @@ void reset(){
     while (pathListBig != nullptr){
       removeFromBigList();
     }
-    while (ultraListBig != nullptr){
-      removeFromUltraListBig();
-    }
+
     //adding the list values back
 
 
@@ -257,17 +262,7 @@ void reset(){
     appendToBigList(0);
     appendToBigList(2);
 
-    appendToUltraListBig(165);
-    appendToUltraListBig(165);
-    appendToUltraListBig(165);
-    appendToUltraListBig(211);
-    appendToUltraListBig(211);
-    appendToUltraListBig(210);
-    appendToUltraListBig(211);
-    appendToUltraListBig(211);
-    appendToUltraListBig(165);
-    appendToUltraListBig(165);
-    appendToUltraListBig(52);
+
 }
 
 
@@ -289,9 +284,6 @@ void setup() {
 
     myServo.attach(6); // attaches the servo on pin 6 to the servo object
 
-
- 
-
     //list for pathways
     //path to follow,  0 for a right, 1 for a left turn,2 for straight//N.B append function adds to the start of the list
     appendToBigList(2);
@@ -306,20 +298,6 @@ void setup() {
     appendToBigList(0);
     appendToBigList(2);
 
-    //list for ultrasonic values for after each junction turn
-    //values: 52, 165, 165, 211, 211, 210, 211, 211, 165, 165, 165
-    appendToUltraListBig(165);
-    appendToUltraListBig(165);
-    appendToUltraListBig(165);
-    appendToUltraListBig(211);
-    appendToUltraListBig(211);
-    appendToUltraListBig(210);
-    appendToUltraListBig(211);
-    appendToUltraListBig(211);
-    appendToUltraListBig(165);
-    appendToUltraListBig(165);
-    appendToUltraListBig(52);
-
 
     if (!AFMS.begin()) {
         Serial.println("Could not find Motor Shield. Check wiring.");
@@ -327,11 +305,6 @@ void setup() {
     }
     Serial.println("Motor Shield found.");
 }
-
-
-
-
-
 
 
 void loop() {
