@@ -1,0 +1,353 @@
+
+
+
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+#include <Servo.h>
+
+//lets us use arrays
+struct Node {
+  int data;
+  Node * next;
+};
+
+//initialises the list and turnsList
+
+Node* pathListBig = nullptr; //holds the list of turns in order to make
+Node* ultraListBig = nullptr;//holds list of ultrasonic distances at each point, if no block in way
+
+
+//fuction to add to list
+void appendToBigList(int value){
+  Node * newNode = new Node;
+  newNode->data = value;
+  newNode->next = pathListBig;
+  pathListBig = newNode; 
+}
+
+//function to remove from list
+void removeFromBigList() {
+  if (pathListBig != nullptr) {
+    Node* temp = pathListBig;
+    pathListBig = pathListBig->next;
+    delete temp;
+  }
+}
+
+
+
+
+void appendToUltraListBig(int value){
+  Node * newNode = new Node;
+  newNode->data = value;
+  newNode->next = ultraListBig;
+  ultraListBig = newNode; 
+}
+
+//function to remove from list
+void removeFromUltraListBig() {
+  if (ultraListBig != nullptr) {
+    Node* temp = ultraListBig;
+    ultraListBig = ultraListBig->next;
+    delete temp;
+  }
+}
+
+
+//tof setup
+DFRobot_VL53L0X tofSensor;
+
+//ultrasound setup
+#define MAX_RANG (520)
+#define ADC_SOLUTION (1023.0)
+
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
+
+Servo myServo; // create servo object to control a servo
+int servoPos = 0; // variable to store the servo position
+
+
+int sideSensor = A0;//ultrasound sensor
+int frLS = 5; // front right line sensor
+int flLS = 2; // front left line sensor
+int leftLS = 3;// left side line sensor
+int rightLS = 4;// right side line sensor
+int redLED =12;
+int greenLED = 13;
+int resetButton =7;
+
+int reading; //defined to use later as the tof reading variable
+float dist_t, sensity_t;//for the ultrasound sensor
+int error = 7; // for the error on the ultrasound reading 
+
+int defaultSpeed = 180;
+int oldSpeedLeft = 0;  // Declare oldSpeed as a global variable
+int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
+int valLeft = 0;   // Declare valLeft as a global variable
+int valRight = 0;  // Declare valRight as a global variable
+
+void setup() {
+    Serial.begin(9600);
+    
+    pinMode(sideSensor, INPUT); // the ultrasound sensor
+    
+    pinMode(frLS, INPUT);
+    pinMode(flLS, INPUT);
+    pinMode(leftLS, INPUT);
+    pinMode(rightLS, INPUT);
+
+    pinMode(redLED, OUTPUT);
+    pinMode(greenLED,OUTPUT);
+
+    pinMode(resetButton,INPUT);
+
+    myServo.attach(6); // attaches the servo on pin 6 to the servo object
+
+
+ 
+
+    //list for pathways
+    //path to follow,  0 for a right, 1 for a left turn,2 for straight//N.B append function adds to the start of the list
+    appendToBigList(2);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(0);
+    appendToBigList(2);
+
+    //list for ultrasonic values for after each junction turn
+    //values: 52, 165, 165, 211, 211, 210, 211, 211, 165, 165, 165
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(211);
+    appendToUltraListBig(211);
+    appendToUltraListBig(210);
+    appendToUltraListBig(211);
+    appendToUltraListBig(211);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(52);
+
+
+    if (!AFMS.begin()) {
+        Serial.println("Could not find Motor Shield. Check wiring.");
+        while (1);
+    }
+    Serial.println("Motor Shield found.");
+}
+
+
+
+void speedLeft(Adafruit_DCMotor *motorName, int speed) {
+    speed = speed *-1;
+    if (speed == oldSpeedLeft) {
+        return;
+        
+    } else {
+        if (speed < 0) {
+            motorName->run(BACKWARD);
+            motorName->setSpeed(speed * -1);
+            
+        } else {
+            motorName->run(FORWARD);
+            motorName->setSpeed(speed);
+            
+        }
+        oldSpeedLeft = speed;
+
+  
+    }
+}
+void speedRight(Adafruit_DCMotor *motorName, int speed) {
+    speed = speed *-1;
+    if (speed == oldSpeedRight) {
+        return;
+        
+    } else {
+        if (speed < 0) {
+            motorName->run(BACKWARD);
+            motorName->setSpeed(speed * -1);
+        } else {
+            motorName->run(FORWARD);
+            motorName->setSpeed(speed);
+        }
+        oldSpeedRight = speed;
+  
+    }
+}
+
+
+
+void followLine() {
+    int valLeft = digitalRead(flLS);
+    int valRight = digitalRead(frLS);
+    if (valLeft > valRight) {
+        speedRight(rightMotor, defaultSpeed-75);
+        speedLeft(leftMotor, defaultSpeed+75);
+    }
+    if (valRight> valLeft){
+        speedLeft(leftMotor, defaultSpeed-75);
+        speedRight(rightMotor, defaultSpeed+75);
+    }
+    if(valRight == valLeft){
+        speedLeft(leftMotor, defaultSpeed);
+        speedRight(rightMotor, defaultSpeed);    
+    }
+}
+
+void moveToJunction() {
+    followLine();
+    if (digitalRead(leftLS)) {
+        Serial.println("Junction");
+        speedLeft(leftMotor, 1);
+        speedRight(rightMotor,1);
+        delay(1000);
+        //Serial.println(pathListBig->data);
+        if (pathListBig->data == 1){
+            Serial.println("turning");
+            leftTurn();
+            removeFromBigList();
+            delay(1000);
+        }
+        else if (pathListBig->data == 0){
+            Serial.println("Turning right");
+            rightTurn();
+            removeFromBigList();
+            delay(1000);//delay to make sure the car can get off the junction so it doesnt stay at the same one and keep turning
+        }
+        else{
+            speedLeft(leftMotor, defaultSpeed);
+            speedRight(rightMotor,defaultSpeed);
+            removeFromBigList();
+            delay(1000);
+        }
+        
+    }
+}
+
+void leftTurn() {
+    speedRight(rightMotor, -100);
+    speedLeft(leftMotor, 100);
+    delay(4100);//give time for left sensor to get off white line
+    Serial.println("turn finished");
+
+
+}
+void rightTurn(){
+
+    speedRight(rightMotor, 100);
+    speedLeft(leftMotor, -100);
+    delay(4100);//give time for left sensor to get off white line
+
+
+    
+    Serial.println("turn finished");
+}
+
+
+void checkForBlockDownwards(){
+    //values for the tof sensor when touching cubes
+    //46 dense
+    //58 less dense
+    reading = tofSensor.getDistance();
+    if (reading < 30){
+        Serial.println("Block");
+        blockBurglar();
+    }
+    
+}
+//to trap the block in the cage
+void blockBurglar(){
+    // goes from 0 degrees to 180 degrees in steps of 1 degree
+    for (servoPos = 0; servoPos <= 180; servoPos += 1) { 
+        myServo.write(servoPos); // tell servo to go to position in variable 'pos'
+        delay(15); // waits 15 ms for the servo to reach the position
+    }
+
+}
+
+void ultrasonicCheck(){
+  sensity_t = analogRead(sideSensor);
+  dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
+  if (dist_t < 210-error){
+    Serial.println("Block found");
+    Serial.println(dist_t);
+    leftTurn();
+  }
+
+}
+
+void reset(){
+    speedLeft(leftMotor,defaultSpeed);
+    speedRight(rightMotor,defaultSpeed);
+
+
+    while (pathListBig != nullptr){
+      removeFromBigList();
+    }
+    while (ultraListBig != nullptr){
+      removeFromUltraListBig();
+    }
+    //adding the list values back
+
+
+    appendToBigList(2);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(1);
+    appendToBigList(2);
+    appendToBigList(0);
+    appendToBigList(2);
+
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(211);
+    appendToUltraListBig(211);
+    appendToUltraListBig(210);
+    appendToUltraListBig(211);
+    appendToUltraListBig(211);
+    appendToUltraListBig(165);
+    appendToUltraListBig(165);
+    appendToUltraListBig(52);
+}
+
+
+
+void loop() {
+  
+  if (digitalRead(resetButton)){
+    reset();
+  }
+
+  speedRight(rightMotor, defaultSpeed);
+  speedLeft(leftMotor, defaultSpeed);
+  moveToJunction();
+  ultrasonicCheck();
+  }
+  
+
+
+
+
+
+
+
+
