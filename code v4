@@ -290,10 +290,29 @@ void ultrasonicCheck(){
   if (dist_t < 210-error){
     Serial.println("Block found");
     Serial.println(dist_t);
-    leftTurn();
+    retrieveSideBlock();
   }
-
 }
+void retrieveSideBlock(){
+    //reverses a bit
+    speedLeft(leftMotor,-50);
+    speedRight(rightMotor,-50);
+    delay(1300);
+
+    //makes turn
+    leftTurn();
+    speedLeft(rightMotor,defaultSpeed);
+    speedRight(rightMotor,defaultSpeed);
+    while (reading> 100){   //while we havent ran into the block yet, determined w the tof sensor
+        ;
+    }
+    speedLeft(leftMotor,0);
+    speedRight(rightMotor,0);
+    delay(3000);
+    Serial.println("blocky uh");
+}
+
+
 
 void reset(){
     speedLeft(leftMotor,defaultSpeed);
