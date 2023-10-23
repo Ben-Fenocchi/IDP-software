@@ -92,6 +92,7 @@ int oldSpeedLeft = 0;  // Declare oldSpeed as a global variable
 int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
 int valLeft = 0;   // Declare valLeft as a global variable
 int valRight = 0;  // Declare valRight as a global variable
+float distanceAfterTurn = 0; // Declare distanceAfterTurn as a global variable
 
 void setup() {
     Serial.begin(9600);
@@ -239,21 +240,25 @@ void moveToJunction() {
 }
 
 void leftTurn() {
+    sensity_t = analogRead(sideSensor);
+    dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
     speedRight(rightMotor, -100);
     speedLeft(leftMotor, 100);
     delay(4100);//give time for left sensor to get off white line
+    distanceAfterTurn = dist_t;
+    Serial.println(distanceAfterTurn);
     Serial.println("turn finished");
 
 
 }
 void rightTurn(){
-
+    sensity_t = analogRead(sideSensor);
+    dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
     speedRight(rightMotor, 100);
     speedLeft(leftMotor, -100);
     delay(4100);//give time for left sensor to get off white line
-
-
-    
+    distanceAfterTurn = dist_t;
+    Serial.println(distanceAfterTurn);
     Serial.println("turn finished");
 }
 

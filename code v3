@@ -10,8 +10,16 @@
 struct Node {
   int data;
   Node * next;
-};
+}
 
+
+
+
+
+
+
+
++1
 //initialises the list turningList and turnsList
 Node* turningList = nullptr; //holds the details for a turn
 Node* pathListBig = nullptr; //holds the list of turns in order to make
