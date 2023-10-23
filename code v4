@@ -11,18 +11,25 @@ struct Node {
   int data;
   Node * next;
 };
-//initialises the list and turnsList
+
+//initialises the lists
 Node* pathListBig = nullptr; //holds the list of turns in order to make
+Node* goHomeList = nullptr; //holds the list of turns in order to make
 
 
-//fuctions to add to lists
+//fuctions to add to lists(appends to the front of lists)
 void appendToBigList(int value){
   Node * newNode = new Node;
   newNode->data = value;
   newNode->next = pathListBig;
   pathListBig = newNode; 
 }
-
+void appendToGoHomeList(int value){
+  Node * newNode = new Node;
+  newNode->data = value;
+  newNode->next = goHomeList;
+  goHomeList = newNode; 
+}
 
 
 //function to remove from list
@@ -30,6 +37,13 @@ void removeFromBigList() {
   if (pathListBig != nullptr) {
     Node* temp = pathListBig;
     pathListBig = pathListBig->next;
+    delete temp;
+  }
+}
+void removeFromGoHomeList() {
+  if (pathListBig != nullptr) {
+    Node* temp = goHomeList;
+    goHomeList = goHomeList->next;
     delete temp;
   }
 }
@@ -115,6 +129,8 @@ void leftTurn() {
     distanceAfterTurn = dist_t;
     Serial.println(distanceAfterTurn);
     Serial.println("turn finished");
+    appendToGoHomeList(0);//so we can reverse the turns to get home.
+    //N.B have appended 0 even though this is a left turn as it is reversing home
 }
 void rightTurn(){
     sensity_t = analogRead(sideSensor);
@@ -125,6 +141,8 @@ void rightTurn(){
     distanceAfterTurn = dist_t;
     Serial.println(distanceAfterTurn);
     Serial.println("turn finished");
+    appendToGoHomeList(1);//so we can reverse the turns to get home.
+    //N.B have appended 1 even though this is a right turn as it is reversing home
 }
 void followLine() {
     int valLeft = digitalRead(flLS);
@@ -227,6 +245,9 @@ void retrieveSideBlock(){
     speedRight(rightMotor,0);
     delay(3000);
     Serial.println("Found old line");
+    rightTurn();
+    delay(3000);
+    ETgoHome();
 
 }
 
@@ -234,6 +255,7 @@ void ETgoHome(){
     //180 degree turn
     leftTurn();
     leftTUrn();
+    //code to reverse pathways home
 
 }
 
