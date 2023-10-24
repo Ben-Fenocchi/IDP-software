@@ -82,11 +82,13 @@ int oldSpeedRight = 0;  // Declare oldSpeed as a global variable
 int valLeft = 0;   // Declare valLeft as a global variable
 int valRight = 0;  // Declare valRight as a global variable
 float distanceAfterTurn = 0; // Declare distanceAfterTurn as a global variable
+
+//n.b if change these here also need to change in reset function
 int defaultSpeed = 180;
 int lineSpeedAdjustment = 75;
 int home = 1;//so we know when we are home
 //constants
-const int error = 7; // for the error on the ultrasound reading 
+const int error = 20; // for the error on the ultrasound reading 
 
 
 
@@ -215,7 +217,7 @@ void blockBurglar(){
 void ultrasonicCheck(){
   sensity_t = analogRead(sideSensor);
   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
-  if (dist_t < 210-error){
+  if (dist_t < distanceAfterTurn - error){
     Serial.println("Block found");
     Serial.println(dist_t);
     retrieveSideBlock();
@@ -225,13 +227,14 @@ void retrieveSideBlock(){
     //reverses a bit
     speedLeft(leftMotor,-50);
     speedRight(rightMotor,-50);
-    delay(1300);
+    delay(1000);
 
     //makes turn
     leftTurn();
     speedLeft(rightMotor,defaultSpeed);
     speedRight(rightMotor,defaultSpeed);
     while (reading> 100){   //while we havent ran into the block yet, determined w the tof sensor
+       Serial.println("Searching for block");
         ;
     }
     speedLeft(leftMotor,0);
@@ -239,9 +242,10 @@ void retrieveSideBlock(){
     delay(3000);
     Serial.println("blocky uh");
     //returning to original line
-    while(digitalRead(leftLS)<2){
+    while(digitalRead(leftLS)<1){
         speedLeft(leftMotor,-defaultSpeed);
         speedRight(rightMotor,-defualtSpeed);
+        Serial.println("Reversing back to line")
     }
     speedLeft(leftMotor,0);
     speedRight(rightMotor,0);
@@ -261,7 +265,7 @@ void ETgoHome(){
         moveToJunction(goHomeList);
         if (goHomeList ->data == nullptr){
             home = 1;
-            Serial.println("We are home");
+            Serial.println("We are home")
         }
     }
     
@@ -273,15 +277,20 @@ void ETgoHome(){
 void reset(){
     speedLeft(leftMotor,defaultSpeed);
     speedRight(rightMotor,defaultSpeed);
+    home = 0;
+    defaultSpeed = 180;
+    lineSpeedAdjustment = 75;
 
 
+    //emptying lists
     while (pathListBig != nullptr){
       removeFromBigList();
     }
+    while (goHomeList != nullptr){
+      removeFromGoHomeList();
+    }
 
     //adding the list values back
-
-
     appendToBigList(2);
     appendToBigList(2);
     appendToBigList(1);
@@ -293,8 +302,6 @@ void reset(){
     appendToBigList(2);
     appendToBigList(0);
     appendToBigList(2);
-
-
 }
 
 
