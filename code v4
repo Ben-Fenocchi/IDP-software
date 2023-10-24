@@ -259,6 +259,10 @@ void ETgoHome(){
     lineSpeedAdjustment = lineSpeedAdjustment * -1;
     while (home = 0){
         moveToJunction(goHomeList);
+        if (goHomeList ->data == nullptr){
+            home = 1;
+            Serial.println("We are home");
+        }
     }
     
     
