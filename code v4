@@ -50,8 +50,7 @@ void removeFromGoHomeList() {
 
 
 //---------------------------------------Setup for variables-----------------------------------------
-//tof setup
-DFRobot_VL53L0X tofSensor;
+
 
 //ultrasound setup
 #define MAX_RANG (520)
@@ -61,6 +60,8 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
 
+
+DFRobot_VL53L0X tofSensor;//creating tof object
 Servo myServo; // create servo object to control a servo
 int servoPos = 0; // variable to store the servo position
 
