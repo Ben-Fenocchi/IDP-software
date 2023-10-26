@@ -130,7 +130,7 @@ void leftTurn() {
   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
   speedRight(rightMotor, -150);
   speedLeft(leftMotor, 150);
-  delay(380);  //give time for left sensor to get off white line
+  delay(3000);  //give time for left sensor to get off white line
   distanceAfterTurn = dist_t;
   Serial.println(distanceAfterTurn);
   Serial.println("turn finished");
@@ -142,7 +142,7 @@ void rightTurn() {
   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
   speedRight(rightMotor, 150);
   speedLeft(leftMotor, -150);
-  delay(380);  //give time for left sensor to get off white line
+  delay(3000);  //give time for left sensor to get off white line
   distanceAfterTurn = dist_t;
   Serial.println(distanceAfterTurn);
   Serial.println("turn finished");
@@ -174,7 +174,7 @@ void moveToJunction(Node *listName) {
     delay(1000);
     //Serial.println(pathListBig->data);
     if (listName->data == 1) {
-      Serial.println("turning");
+      Serial.println("turning left");
       leftTurn();
       removeFromBigList();
       
@@ -184,12 +184,15 @@ void moveToJunction(Node *listName) {
       removeFromBigList();
 
     } else {
+      Serial.println("going Straight");
       speedLeft(leftMotor, defaultSpeed);
       speedRight(rightMotor, defaultSpeed);
       removeFromBigList();
       
     }
-    delay(3000);//to make sure it can get off the junction and not redect it
+    speedLeft(leftMotor, defaultSpeed);
+    speedRight(rightMotor, defaultSpeed);
+    delay(2000);//to make sure it can get off the junction and not redect it
   }
 }
 
@@ -198,7 +201,7 @@ void checkForBlockDownwards() {
   //46 dense
   //58 less dense
   reading = tofSensor.getDistance();
-  Serial.println(reading);
+  //Serial.println(reading);
   if (reading < 50) {
     Serial.println("Block");
     blockBurglar();
@@ -206,18 +209,19 @@ void checkForBlockDownwards() {
 }
 //to trap the block in the cage
 void blockBurglar() {
-  
   // goes from 0 degrees to 180 degrees in steps of 1 degree
   for (servoPos = 0; servoPos <= 50; servoPos += 1) {
     myServo.write(servoPos);  // tell servo to go to position in variable 'pos'
     delay(15);                // waits 15 ms for the servo to reach the position
   }
-/*
-  for (servoPos = 50; servoPos > 0; servoPos -= 1) {
-    myServo.write(servoPos);  // tell servo to go to position in variable 'pos'
-    delay(15);                // waits 15 ms for the servo to reach the position
+  //if higher density block
+  if (reading<55){
+    digitalWrite(redLED, HIGH);
   }
-*/
+  else{
+    digitalWrite(greenLED, LOW);
+  }
+  //ETgoHome();
 }
 
 void ultrasonicCheck() {
@@ -241,7 +245,9 @@ void retrieveSideBlock() {
   speedRight(rightMotor, defaultSpeed);
   while (reading > 100) {  //while we havent ran into the block yet, determined w the tof sensor
     Serial.println("Searching for block");
-    ;
+      if (digitalRead(resetButton)) {
+        reset();
+      }
   }
   speedLeft(leftMotor, 0);
   speedRight(rightMotor, 0);
@@ -249,6 +255,9 @@ void retrieveSideBlock() {
   Serial.println("blocky uh");
   //returning to original line
   while (digitalRead(leftLS) < 1) {
+    if (digitalRead(resetButton)) {
+      reset();
+    }
     speedLeft(leftMotor, -defaultSpeed);
     speedRight(rightMotor, -defaultSpeed);
     Serial.println("Reversing back to line");
@@ -277,8 +286,13 @@ void ETgoHome(){
 */
 
 void reset() {
-  speedLeft(leftMotor, defaultSpeed);
-  speedRight(rightMotor, defaultSpeed);
+  distanceAfterTurn = 10000000;
+  speedLeft(leftMotor, 0);
+  speedRight(rightMotor, 0);
+  digitalWrite(redLED, LOW);
+  digitalWrite(redLED, LOW);
+
+  
   home = 0;
   defaultSpeed = 180;
   lineSpeedAdjustment = 75;
@@ -306,6 +320,9 @@ void reset() {
   appendToBigList(0);
   appendToBigList(2);
   Serial.println("reset");
+  delay(2000);
+  speedLeft(leftMotor, defaultSpeed);
+  speedRight(rightMotor, defaultSpeed);
 }
 
 
