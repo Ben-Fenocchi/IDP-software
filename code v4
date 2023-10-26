@@ -130,7 +130,7 @@ void leftTurn() {
   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
   speedRight(rightMotor, -150);
   speedLeft(leftMotor, 150);
-  delay(3000);  //give time for left sensor to get off white line
+  delay(2700);  //give time for left sensor to get off white line
   distanceAfterTurn = dist_t;
   Serial.println(distanceAfterTurn);
   Serial.println("turn finished");
@@ -142,7 +142,7 @@ void rightTurn() {
   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
   speedRight(rightMotor, 150);
   speedLeft(leftMotor, -150);
-  delay(3000);  //give time for left sensor to get off white line
+  delay(2700);  //give time for left sensor to get off white line
   distanceAfterTurn = dist_t;
   Serial.println(distanceAfterTurn);
   Serial.println("turn finished");
@@ -234,6 +234,7 @@ void ultrasonicCheck() {
   }
 }
 void retrieveSideBlock() {
+  Serial.println("retrieving side block");
   //reverses a bit
   speedLeft(leftMotor, -50);
   speedRight(rightMotor, -50);
@@ -244,7 +245,7 @@ void retrieveSideBlock() {
   speedLeft(rightMotor, defaultSpeed);
   speedRight(rightMotor, defaultSpeed);
   while (reading > 100) {  //while we havent ran into the block yet, determined w the tof sensor
-    Serial.println("Searching for block");
+    
       if (digitalRead(resetButton)) {
         reset();
       }
@@ -286,6 +287,7 @@ void ETgoHome(){
 */
 
 void reset() {
+  Serial.println("reset");
   distanceAfterTurn = 10000000;
   speedLeft(leftMotor, 0);
   speedRight(rightMotor, 0);
@@ -319,7 +321,7 @@ void reset() {
   appendToBigList(2);
   appendToBigList(0);
   appendToBigList(2);
-  Serial.println("reset");
+  
   delay(2000);
   speedLeft(leftMotor, defaultSpeed);
   speedRight(rightMotor, defaultSpeed);
