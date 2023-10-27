@@ -73,7 +73,7 @@ int leftLS = 3;       // left side line sensor
 int rightLS = 4;      // right side line sensor
 int redLED = 12;
 int greenLED = 13;
-int resetButton = 7;
+int startButton = 7;
 
 //variable set ups
 int reading;                  //defined to use later as the tof reading variable
@@ -89,6 +89,7 @@ int defaultSpeed = 200;
 int extremeAdjustmentSpeed = 250;
 int adjustmentSpeed = 175;
 int home = 1;  //so we know when we are home
+int start = 0; //robot will not move untill told to start by the button
 //constants
 const int error = 20;  // for the error on the ultrasound reading
 
@@ -290,46 +291,7 @@ void ETgoHome(){
 }
 */
 
-void reset() {
-  Serial.println("reset");
-  distanceAfterTurn = 10000000;
-  speedLeft( 0);
-  speedRight( 0);
-  digitalWrite(redLED, LOW);
-  digitalWrite(redLED, LOW);
 
-  
-  home = 0;
-  defaultSpeed = 180;
-  lineSpeedAdjustment = 75;
-  //resettting the hugger
-  myServo.write(0);
-
-  //emptying lists
-  while (pathListBig != nullptr) {
-    removeFromBigList();
-  }
-  while (goHomeList != nullptr) {
-    removeFromGoHomeList();
-  }
-
-  //adding the list values back
-  appendToBigList(2);
-  appendToBigList(2);
-  appendToBigList(1);
-  appendToBigList(2);
-  appendToBigList(1);
-  appendToBigList(1);
-  appendToBigList(2);
-  appendToBigList(1);
-  appendToBigList(2);
-  appendToBigList(0);
-  appendToBigList(2);
-  
-  delay(2000);
-  speedLeft( defaultSpeed);
-  speedRight( defaultSpeed);
-}
 
 
 //-------------------------------------------------main program-------------------------------------------
@@ -380,12 +342,16 @@ void setup() {
 
 void loop() {
 
-  if (digitalRead(resetButton)) {
-    reset();
+  if (digitalRead(startButton)) {
+    start = 1;
+    delay(1500);
   }
-  checkForBlockDownwards();
-  speedRight( defaultSpeed);
-  speedLeft( defaultSpeed);
-  moveToJunction(pathListBig);
-  ultrasonicCheck();
+  if (start){
+    checkForBlockDownwards();
+    speedRight( defaultSpeed);
+    speedLeft( defaultSpeed);
+    moveToJunction(pathListBig);
+    ultrasonicCheck();
+  }
+  
 }
