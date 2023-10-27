@@ -248,10 +248,7 @@ void retrieveSideBlock() {
   speedLeft( defaultSpeed);
   speedRight( defaultSpeed);
   while (reading > 100) {  //while we havent ran into the block yet, determined w the tof sensor
-    
-      if (digitalRead(resetButton)) {
-        reset();
-      }
+    ;
   }
   speedLeft( 0);
   speedRight( 0);
@@ -259,9 +256,6 @@ void retrieveSideBlock() {
   Serial.println("blocky uh");
   //returning to original line
   while (digitalRead(leftLS) < 1) {
-    if (digitalRead(resetButton)) {
-      reset();
-    }
     speedLeft( -defaultSpeed);
     speedRight( -defaultSpeed);
     Serial.println("Reversing back to line");
@@ -309,7 +303,7 @@ void setup() {
   pinMode(redLED, OUTPUT);
   pinMode(greenLED, OUTPUT);
 
-  pinMode(resetButton, INPUT);
+  pinMode(startButton, INPUT);
 
   myServo.attach(6);  // attaches the servo on pin 6 to the servo object
 
