@@ -86,7 +86,8 @@ float distanceAfterTurn = 0;  // Declare distanceAfterTurn as a global variable
 
 //n.b if change these here also need to change in reset function
 int defaultSpeed = 200;
-int lineSpeedAdjustment = 55;
+int extremeAdjustmentSpeed = 250;
+int adjustmentSpeed = 175;
 int home = 1;  //so we know when we are home
 //constants
 const int error = 20;  // for the error on the ultrasound reading
@@ -152,15 +153,18 @@ void rightTurn() {
 void followLine() {
   int valLeft = digitalRead(flLS);
   int valRight = digitalRead(frLS);
+  //if left is on and right is off, slow down the left one
   if (valLeft > valRight) {
-    speedRight(rightMotor, defaultSpeed - lineSpeedAdjustment);
-    speedLeft(leftMotor, defaultSpeed + lineSpeedAdjustment);
+    speedRight(rightMotor, defaultSpeed );
+    speedLeft(leftMotor, adjustmentSpeed);
   }
-  if (valRight > valLeft) {
-    speedLeft(leftMotor, defaultSpeed - lineSpeedAdjustment);
-    speedRight(rightMotor, defaultSpeed + lineSpeedAdjustment);
+  //if right is on and left is off, slow down the right one
+  else if (valRight > valLeft) {
+    speedLeft(leftMotor, defaultSpeed);
+    speedRight(rightMotor, adjustmentSpeed);
   }
-  if (valRight == valLeft) {
+  //if both are on then set speed to forward
+  else if (valRight == valLeft) {
     speedLeft(leftMotor, defaultSpeed);
     speedRight(rightMotor, defaultSpeed);
   }
