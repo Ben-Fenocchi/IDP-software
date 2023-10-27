@@ -96,32 +96,32 @@ const int error = 20;  // for the error on the ultrasound reading
 
 //--------------------------------------------------functions-----------------------------------------
 
-void speedLeft(Adafruit_DCMotor *motorName, int speed) {
+void speedLeft(int speed) {
   speed = speed * -1;
   if (speed == oldSpeedLeft) {
     return;
   } else {
     if (speed < 0) {
-      motorName->run(BACKWARD);
-      motorName->setSpeed(speed * -1);
+      leftMotor->run(BACKWARD);
+      leftMotor->setSpeed(speed * -1);
     } else {
-      motorName->run(FORWARD);
-      motorName->setSpeed(speed);
+      leftMotor->run(FORWARD);
+      leftMotor->setSpeed(speed);
     }
     oldSpeedLeft = speed;
   }
 }
-void speedRight(Adafruit_DCMotor *motorName, int speed) {
+void speedRight(int speed) {
   speed = speed * -1;
   if (speed == oldSpeedRight) {
     return;
   } else {
     if (speed < 0) {
-      motorName->run(BACKWARD);
-      motorName->setSpeed(speed * -1);
+      rightMotor->run(BACKWARD);
+      rightMotor->setSpeed(speed * -1);
     } else {
-      motorName->run(FORWARD);
-      motorName->setSpeed(speed);
+      rightMotor->run(FORWARD);
+      rightMotor->setSpeed(speed);
     }
     oldSpeedRight = speed;
   }
@@ -129,8 +129,8 @@ void speedRight(Adafruit_DCMotor *motorName, int speed) {
 void leftTurn() {
   sensity_t = analogRead(sideSensor);
   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
-  speedRight(rightMotor, -150);
-  speedLeft(leftMotor, 150);
+  speedRight( -150);
+  speedLeft( 150);
   delay(2700);  //give time for left sensor to get off white line
   distanceAfterTurn = dist_t;
   Serial.println(distanceAfterTurn);
@@ -141,8 +141,8 @@ void leftTurn() {
 void rightTurn() {
   sensity_t = analogRead(sideSensor);
   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
-  speedRight(rightMotor, 150);
-  speedLeft(leftMotor, -150);
+  speedRight( 150);
+  speedLeft( -150);
   delay(2700);  //give time for left sensor to get off white line
   distanceAfterTurn = dist_t;
   Serial.println(distanceAfterTurn);
@@ -155,26 +155,26 @@ void followLine() {
   int valRight = digitalRead(frLS);
   //if left is on and right is off, slow down the left one
   if (valLeft > valRight) {
-    speedRight(rightMotor, defaultSpeed );
-    speedLeft(leftMotor, adjustmentSpeed);
+    speedRight( defaultSpeed );
+    speedLeft( adjustmentSpeed);
   }
   //if right is on and left is off, slow down the right one
   else if (valRight > valLeft) {
-    speedLeft(leftMotor, defaultSpeed);
-    speedRight(rightMotor, adjustmentSpeed);
+    speedLeft( defaultSpeed);
+    speedRight( adjustmentSpeed);
   }
   //if both are on then set speed to forward
   else if (valRight == valLeft) {
-    speedLeft(leftMotor, defaultSpeed);
-    speedRight(rightMotor, defaultSpeed);
+    speedLeft( defaultSpeed);
+    speedRight( defaultSpeed);
   }
 }
 void moveToJunction(Node *listName) {
   followLine();
   if (digitalRead(leftLS)) {
     Serial.println("Junction");
-    speedLeft(leftMotor, 1);
-    speedRight(rightMotor, 1);
+    speedLeft( 1);
+    speedRight( 1);
     delay(1000);
     //Serial.println(pathListBig->data);
     if (listName->data == 1) {
@@ -189,13 +189,13 @@ void moveToJunction(Node *listName) {
 
     } else {
       Serial.println("going Straight");
-      speedLeft(leftMotor, defaultSpeed);
-      speedRight(rightMotor, defaultSpeed);
+      speedLeft( defaultSpeed);
+      speedRight( defaultSpeed);
       removeFromBigList();
       
     }
-    speedLeft(leftMotor, defaultSpeed);
-    speedRight(rightMotor, defaultSpeed);
+    speedLeft( defaultSpeed);
+    speedRight( defaultSpeed);
     delay(2000);//to make sure it can get off the junction and not redect it
   }
 }
@@ -240,22 +240,22 @@ void ultrasonicCheck() {
 void retrieveSideBlock() {
   Serial.println("retrieving side block");
   //reverses a bit
-  speedLeft(leftMotor, -50);
-  speedRight(rightMotor, -50);
+  speedLeft( -50);
+  speedRight( -50);
   delay(1000);
 
   //makes turn
   leftTurn();
-  speedLeft(rightMotor, defaultSpeed);
-  speedRight(rightMotor, defaultSpeed);
+  speedLeft( defaultSpeed);
+  speedRight( defaultSpeed);
   while (reading > 100) {  //while we havent ran into the block yet, determined w the tof sensor
     
       if (digitalRead(resetButton)) {
         reset();
       }
   }
-  speedLeft(leftMotor, 0);
-  speedRight(rightMotor, 0);
+  speedLeft( 0);
+  speedRight( 0);
   delay(3000);
   Serial.println("blocky uh");
   //returning to original line
@@ -263,12 +263,12 @@ void retrieveSideBlock() {
     if (digitalRead(resetButton)) {
       reset();
     }
-    speedLeft(leftMotor, -defaultSpeed);
-    speedRight(rightMotor, -defaultSpeed);
+    speedLeft( -defaultSpeed);
+    speedRight( -defaultSpeed);
     Serial.println("Reversing back to line");
   }
-  speedLeft(leftMotor, 0);
-  speedRight(rightMotor, 0);
+  speedLeft( 0);
+  speedRight( 0);
   delay(3000);
   Serial.println("Found old line");
   rightTurn();
@@ -293,8 +293,8 @@ void ETgoHome(){
 void reset() {
   Serial.println("reset");
   distanceAfterTurn = 10000000;
-  speedLeft(leftMotor, 0);
-  speedRight(rightMotor, 0);
+  speedLeft( 0);
+  speedRight( 0);
   digitalWrite(redLED, LOW);
   digitalWrite(redLED, LOW);
 
@@ -327,8 +327,8 @@ void reset() {
   appendToBigList(2);
   
   delay(2000);
-  speedLeft(leftMotor, defaultSpeed);
-  speedRight(rightMotor, defaultSpeed);
+  speedLeft( defaultSpeed);
+  speedRight( defaultSpeed);
 }
 
 
@@ -384,8 +384,8 @@ void loop() {
     reset();
   }
   checkForBlockDownwards();
-  speedRight(rightMotor, defaultSpeed);
-  speedLeft(leftMotor, defaultSpeed);
+  speedRight( defaultSpeed);
+  speedLeft( defaultSpeed);
   moveToJunction(pathListBig);
   ultrasonicCheck();
 }
