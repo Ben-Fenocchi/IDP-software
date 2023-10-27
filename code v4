@@ -128,24 +128,22 @@ void speedRight(int speed) {
   }
 }
 void leftTurn() {
-  sensity_t = analogRead(sideSensor);
-  dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
   speedRight( -150);
   speedLeft( 150);
   delay(2700);  //give time for left sensor to get off white line
-  distanceAfterTurn = dist_t;
+  //calculate new initialised side sensor reading
+  distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
   Serial.println(distanceAfterTurn);
   Serial.println("turn finished");
   appendToGoHomeList(0);  //so we can reverse the turns to get home.
                           //N.B have appended 0 even though this is a left turn as it is reversing home
 }
 void rightTurn() {
-  sensity_t = analogRead(sideSensor);
-  dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
   speedRight( 150);
   speedLeft( -150);
   delay(2700);  //give time for left sensor to get off white line
-  distanceAfterTurn = dist_t;
+  //calculate new initialised side sensor reading
+  distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
   Serial.println(distanceAfterTurn);
   Serial.println("turn finished");
   appendToGoHomeList(1);  //so we can reverse the turns to get home.
