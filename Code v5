@@ -178,6 +178,11 @@ void moveToJunction() {
   followLine();
   if (digitalRead(leftLS)) {
     Serial.println("Junction");
+    Serial.println("Edging forwards")//this should get us right on the edge of the junction before turning
+    //if this works need to add to the go home function
+    speedLeft(100);
+    speedRight(100);
+    delay(500);
     speedLeft( 0);
     speedRight( 0);
     delay(1000);
