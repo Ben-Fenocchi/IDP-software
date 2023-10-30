@@ -100,6 +100,10 @@ const int error = 20;  // for the error on the ultrasound reading
 //for if both sensors go off, we know which ones to speed up
 int lastSensorOn = 3; //1 for left 2 for right, 3 for the very start when both sensors are off
 
+//for the 90 degree turns
+int turningList[]={1,0,1,4};
+int stage = 0;
+
 
 //--------------------------------------------------functions-----------------------------------------
 
@@ -136,10 +140,16 @@ void speedRight(int speed) {
 void leftTurn() {
   speedRight( -150);
   speedLeft( 150);
-  delay(3000);  //give time for left sensor to get off white line
-  //calculate new initialised side sensor reading
+  while ((turningList[stage])!= 4){
+    if (turningList[stage] == digitalRead(leftLS)){
+      Serial.println(turningList[stage]);
+      stage +=1;
+    }
+  }
+  stage = 0;
+
   distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
-  Serial.println(distanceAfterTurn);
+
   Serial.println("turn finished");
   appendToGoHomeList(0);  //so we can reverse the turns to get home.
                           //N.B have appended 0 even though this is a left turn as it is reversing home
@@ -148,13 +158,22 @@ void leftTurn() {
 void rightTurn() {
   speedRight( 150);
   speedLeft( -150);
-  delay(3000);  //give time for left sensor to get off white line
+  while ((turningList[stage])!= 4){
+    if (turningList[stage] == digitalRead(leftLS)){
+      Serial.println(turningList[stage]);
+      stage +=1;
+    }
+  }
+  stage = 0;
+  
+
+
   //calculate new initialised side sensor reading
   distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
-  Serial.println(distanceAfterTurn);
+
   Serial.println("turn finished");
   appendToGoHomeList(1);  //so we can reverse the turns to get home.
-                          //N.B have appended 1 even though this is a right turn as it is reversing home
+  //N.B have appended 1 even though this is a right turn as it is reversing home
   adjustmentSpeed = initialAdjustmentSpeed;
 }
 void followLine() {
@@ -169,7 +188,7 @@ void followLine() {
     if (adjustmentSpeed<defaultSpeed){
       adjustmentSpeed +=0.5;
     }
-    lastSensorOn=1;
+
   }
   //if right is on and left is off, slow down the right one
   else if (valRight > valLeft) {
@@ -179,7 +198,7 @@ void followLine() {
     if (adjustmentSpeed<defaultSpeed){
       adjustmentSpeed +=0.5;
     }
-    lastSensorOn=2;
+
   }
   //if both are of (either side of line) then set speed to default forward
   else if (valRight == valLeft && valLeft== 0) {
@@ -201,29 +220,7 @@ void moveToJunction(Node *listName) {
     speedRight( 0);
     delay(1000);
 
-    Serial.println("Shimmy yah Shimmy yeh adjustment");
-    // if slightly off centre, rotate car to get inline
-    if (digitalRead(frLS)){
-      Serial.println("rotating anticlockwise");
-      while(frLS){
-        speedLeft(70);
-        speedRight(-70);
-      }
-      Serial.println("Aligned");
-    }
-    //rotating clockwise to straighten car on line
-    else if (digitalRead(flLS)){
-      Serial.println("rotating clockwise");
-      while(flLS){
-        speedLeft(-70);
-        speedRight(70);
-      }
-      Serial.println("Aligned");
-    }
-    //both sensors are black(ie either side of line) as they should be
-    else{
-      Serial.println("Aligned");
-    } 
+
 
 
     //Serial.println(pathListBig->data);
@@ -255,7 +252,7 @@ void checkForBlockDownwards() {
   //46 dense
   //58 less dense
   reading = tofSensor.getDistance();
-  Serial.println(reading);
+  //Serial.println(reading);
   if (reading < 70) {
     Serial.println("Block");
     blockBurglar();
@@ -369,6 +366,7 @@ void setup() {
 
   //list for pathways
   //path to follow,  0 for a right, 1 for a left turn,2 for straight//N.B append function adds to the start of the list
+  /*
   appendToBigList(2);
   appendToBigList(2);
   appendToBigList(1);
@@ -380,7 +378,19 @@ void setup() {
   appendToBigList(2);
   appendToBigList(0);
   appendToBigList(2);
-
+ */
+ //smaller pathway
+ appendToBigList(2);
+ appendToBigList(1);
+ appendToBigList(1);
+ appendToBigList(2);
+ appendToBigList(2);
+ appendToBigList(2);
+ appendToBigList(1);
+ appendToBigList(1);
+ appendToBigList(2);
+ appendToBigList(0);
+ appendToBigList(2);
 
   if (!AFMS.begin()) {
     Serial.println("Could not find Motor Shield. Check wiring.");
@@ -393,7 +403,6 @@ void setup() {
 
 
 void loop() {
-
   if (digitalRead(startButton)) {
     Serial.println("starting");
     start = 1;
