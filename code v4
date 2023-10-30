@@ -89,7 +89,7 @@ float distanceAfterTurn = 0;  // Declare distanceAfterTurn as a global variable
 int defaultSpeed = 220;
 int defaultSpeedLeft = defaultSpeed;
 int defaultSpeedRight = defaultSpeedLeft;
-float initialAdjustmentSpeed = defaultSpeed - 50;
+float initialAdjustmentSpeed = defaultSpeed - 60;
 float adjustmentSpeed = initialAdjustmentSpeed;
 int home = 1;  //so we know when we are home
 int start = 0; //robot will not move untill told to start by the button
@@ -147,6 +147,7 @@ void leftTurn() {
     }
   }
   stage = 0;
+  delay(300);//delay for callibration
 
   distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
 
@@ -165,7 +166,7 @@ void rightTurn() {
     }
   }
   stage = 0;
-  
+  delay(300);//delay for callibration
 
 
   //calculate new initialised side sensor reading
