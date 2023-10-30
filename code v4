@@ -89,7 +89,7 @@ float distanceAfterTurn = 0;  // Declare distanceAfterTurn as a global variable
 int defaultSpeed = 220;
 int defaultSpeedLeft = defaultSpeed;
 int defaultSpeedRight = defaultSpeedLeft;
-float initalAdjustmentSpeed = defaultSpeed - 40;
+float initialAdjustmentSpeed = defaultSpeed - 50;
 float adjustmentSpeed = initialAdjustmentSpeed;
 int home = 1;  //so we know when we are home
 int start = 0; //robot will not move untill told to start by the button
@@ -136,7 +136,7 @@ void speedRight(int speed) {
 void leftTurn() {
   speedRight( -150);
   speedLeft( 150);
-  delay(2700);  //give time for left sensor to get off white line
+  delay(3000);  //give time for left sensor to get off white line
   //calculate new initialised side sensor reading
   distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
   Serial.println(distanceAfterTurn);
@@ -148,7 +148,7 @@ void leftTurn() {
 void rightTurn() {
   speedRight( 150);
   speedLeft( -150);
-  delay(2700);  //give time for left sensor to get off white line
+  delay(3000);  //give time for left sensor to get off white line
   //calculate new initialised side sensor reading
   distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
   Serial.println(distanceAfterTurn);
