@@ -1,0 +1,24 @@
+if (valLeft > valRight) {
+    speedRight(defaultSpeedRight+15);
+    speedLeft(adjustmentSpeed);
+    delay(1250);
+    speedRight(defaultSpeedRight);
+    speedLeft(defaultSpeedLeft);
+    Serial.println("left turn adjustment");
+    lastSensorOn=1;
+  }
+  //if right is on and left is off, slow down the right one
+  else if (valRight > valLeft) {
+    speedLeft( defaultSpeedLeft+15);
+    speedRight( adjustmentSpeed);
+    delay(1250);
+    speedLeft(defaultSpeedLeft);
+    speedRight(defaultSpeedRight);
+    Serial.println("right turn adjustment");
+    lastSensorOn=2;
+  }
+  //if both are of (either side of line) then set speed to default forward
+  else if (valRight == valLeft && valLeft== 0) {
+    speedLeft( defaultSpeedLeft);
+    speedRight( defaultSpeedRight);
+  }
