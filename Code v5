@@ -240,9 +240,39 @@ void blockBurglar() {
     digitalWrite(greenLED, HIGH);
     digitalWrite(redLED, LOW);
   }
-  //ETgoHome();
+  ETgoHome();
 }
 
+
+//function should be called when a block is collected. However robot should drive to the next junction so we
+//have a grid to turn against for the 180 turn in the ETgoHome function
+void ETgoHome(){
+    
+    leftTurn();
+    leftTurn();
+    while (turnStage >=0){
+        followLine();
+        if digitalRead(leftLS){
+            turnValue = pathList[turnStage];
+            if (turnValue == 0 ){//what would be a right turn is now a left
+                leftTurn();
+            }else if (turnValue ==1){//what would be a left turn is now a right
+                rightTurn();
+            }else{
+                //go straight
+            }
+            turnStage -=1;//we are going back up the turn list  
+            speedLeft( defaultSpeedLeft);
+            speedRight( defaultSpeedRight);
+            delay(2000);//to make sure it can get off the junction and not redect it  
+        }
+    }
+}
+
+
+
+
+/*
 void ultrasonicCheck() {
   sensity_t = analogRead(sideSensor);
   dist_t = sensity_t * MAX_RANG / ADC_SOLUTION;
@@ -252,24 +282,7 @@ void ultrasonicCheck() {
     retrieveSideBlock();
   }
 }
-
-/*
-void ETgoHome(){
-    //code to reverse pathways home
-    defaultSpeed = defaultSpeed *-1;
-    lineSpeedAdjustment = lineSpeedAdjustment * -1;
-    while (home = 0){
-        moveToJunction(goHomeList);
-        if ((goHomeList ->data) = nullptr){
-            home = 1;
-            Serial.println("We are home");
-        }
-    }
-}
 */
-
-
-
 
 //-------------------------------------------------main program-------------------------------------------
 void setup() {
