@@ -200,6 +200,32 @@ void moveToJunction(Node *listName) {
     speedLeft( 0);
     speedRight( 0);
     delay(1000);
+
+    Serial.println("Shimmy yah Shimmy yeh adjustment");
+    // if slightly off centre, rotate car to get inline
+    if (digitalRead(frLS)){
+      Serial.println("rotating anticlockwise");
+      while(frLS){
+        speedLeft(70);
+        speedRight(-70);
+      }
+      Serial.println("Aligned");
+    }
+    //rotating clockwise to straighten car on line
+    else if (digitalRead(flLS)){
+      Serial.println("rotating clockwise");
+      while(flLS){
+        speedLeft(-70);
+        speedRight(70);
+      }
+      Serial.println("Aligned");
+    }
+    //both sensors are black(ie either side of line) as they should be
+    else{
+      Serial.println("Aligned");
+    } 
+
+
     //Serial.println(pathListBig->data);
     if (listName->data == 1) {
       Serial.println("turning left");
