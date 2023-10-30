@@ -105,7 +105,7 @@ void leftTurn() {
   speedLeft( 150);
   while ((turningList[turnStage])!= 4){
     if (turningList[turnStage] == digitalRead(leftLS)){
-      Serial.println(turningList[stage]);
+      Serial.println(turningList[turnStage]);
       turnStage +=1;
     }
   }
@@ -174,7 +174,7 @@ void followLine() {
 }
 
 
-void moveToJunction(Node *listName) {
+void moveToJunction() {
   followLine();
   if (digitalRead(leftLS)) {
     Serial.println("Junction");
@@ -252,8 +252,8 @@ void ETgoHome(){
     leftTurn();
     while (turnStage >=0){
         followLine();
-        if digitalRead(leftLS){
-            turnValue = pathList[turnStage];
+        if (digitalRead(leftLS)){
+            int turnValue = pathList[turnStage];
             if (turnValue == 0 ){//what would be a right turn is now a left
                 leftTurn();
             }else if (turnValue ==1){//what would be a left turn is now a right
@@ -335,8 +335,8 @@ void loop() {
     digitalWrite(blueLED,HIGH);
     speedRight( defaultSpeedRight);
     speedLeft( defaultSpeedLeft);
-    moveToJunction(pathListBig);
-    ultrasonicCheck();
+    moveToJunction();
+
   }
   
   
