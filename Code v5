@@ -399,6 +399,10 @@ void deliverBlock() {
   isLightBlock = 0;
 
   //need to add code to get back to the starting position after delivering block
+  //Turned to go to red square when should have gone to green. 
+  //When we dont have a T but an L junction, will the 1,0,1 turn still work?
+
+  //ALSO THE RED LINES MAY NOT TRIP THE WHITE LINE SENSORS SO MAY HAVE TO USE DELAYS
 }
 
 
