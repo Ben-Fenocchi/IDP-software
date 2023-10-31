@@ -60,9 +60,12 @@ int lastSensorOn = 3;  //1 for left 2 for right, 3 for the very start when both 
 //for the 90 degree turns
 int turningList[] = { 1, 0, 1, 4 };
 int turnStage = 0;
-//for 180 degree turn
-int turningList180[] = { 1, 0, 1, 0, 1, 4 };
+//for any other 180 degree turn
+int turningList180[] = {0,1,0,1,4 };
 int turnStage180 = 0;
+//for 180 degree turn on a t junction
+int turningList180T[] = { 1, 0, 1, 0, 1, 4 };
+int turnStage180T = 0;
 
 //for the path
 //2 is straight, 0 is right, 1 is left.  3 is if we have reached the end of the sequence
@@ -108,18 +111,27 @@ void speedRight(int speed) {
 void turn180() {
   speedRight(-150);
   speedLeft(150);
-  while ((turningList180[turnStage180]) != 4) {
-    if (turningList180[turnStage180] == digitalRead(leftLS)) {
-      Serial.println(turningList180[turnStage180]);
-      turnStage180 += 1;
+  if (tJunction){
+    while ((turningList180T[turnStage180T]) != 4) {
+      if (turningList180T[turnStage180T] == digitalRead(leftLS)) {
+        Serial.println(turningList180T[turnStage180T]);
+        turnStage180T += 1;
+      }
     }
+  } else{
+      while ((turningList180T[turnStage180T]) != 4) {
+        if (turningList180T[turnStage180T] == digitalRead(leftLS)) {
+          Serial.println(turningList180T[turnStage180T]);
+          turnStage180T += 1;
+        }
+      }
   }
   //to align the chassis after the turn
   while (digitalRead(rightLS) != 1) {
     speedLeft(-150);
     speedRight(0);
   }
-  turnStage180 = 0;
+  turnStage180T = 0;
   delay(300);
 }
 void leftTurn() {
