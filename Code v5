@@ -267,7 +267,7 @@ void blockBurglar() {
   }
   delay(300);
   //if higher density block fire red
-  if (reading < 56) {
+  if (reading < 46) {
     digitalWrite(redLED, HIGH);
     digitalWrite(greenLED, LOW);
     isHeavyBlock = 1;
@@ -346,10 +346,10 @@ void deliverBlock() {
     }
     //lines up the other line sensor
     while (digitalRead(leftLS)==1 && digitalRead(rightLS) == 0) {
-      speedLeft(0);
+      speedRight(0);
     }
     while (digitalRead(rightLS)==1 && digitalRead(leftLS) == 0) {
-      speedRight(0);
+      speedLeft(0);
     }
     speedLeft(defaultSpeedLeft);
     speedRight(defaultSpeedRight);
