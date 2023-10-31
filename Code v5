@@ -180,8 +180,8 @@ void moveToJunction() {
     Serial.println("Junction");
     Serial.println("Edging forwards");//this should get us right on the edge of the junction before turning
     //if this works need to add to the go home function
-    speedLeft(100);
-    speedRight(100);
+    speedLeft(95);
+    speedRight(95);
     delay(500);
     speedLeft( 0);
     speedRight( 0);
@@ -212,7 +212,7 @@ void moveToJunction() {
 
     speedLeft( defaultSpeedLeft);
     speedRight( defaultSpeedRight);
-    delay(2000);//to make sure it can get off the junction and not redect it
+    delay(500);//to make sure it can get off the junction and not redect it
   }
 }
 
@@ -231,13 +231,16 @@ void checkForBlockDownwards() {
 //to trap the block in the cage
 void blockBurglar() {
   // goes from 0 degrees to 180 degrees in steps of 1 degree
-
+  speedLeft(0);
+  speedRight(0);
+  delay(300);
   for (servoPos = 0; servoPos <= 50; servoPos += 1) {
     myServo.write(servoPos);  // tell servo to go to position in variable 'pos'
     delay(15);                // waits 15 ms for the servo to reach the position
   }
+  delay(300);
   //if higher density block fire red
-  if (reading<48){
+  if (reading<52){
     digitalWrite(redLED, HIGH);
     digitalWrite(greenLED, LOW);
   }
@@ -254,10 +257,11 @@ void blockBurglar() {
 void ETgoHome(){
     
     leftTurn();
+    turnStage = 1;//because of the turning list method, and our delays, if we dont do this 180 is 270
     leftTurn();
     while (turnStage >=0){
         followLine();
-        if (digitalRead(leftLS)){
+        if (digitalRead(rightLS)){
             int turnValue = pathList[turnStage];
             if (turnValue == 0 ){//what would be a right turn is now a left
                 leftTurn();
