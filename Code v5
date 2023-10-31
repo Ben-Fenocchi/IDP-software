@@ -50,7 +50,7 @@ float initialAdjustmentSpeed = defaultSpeed - 65;
 float adjustmentSpeed = initialAdjustmentSpeed;
 int home = 1;   //so we know when we are home
 int start = 0;  //robot will not move untill told to start by the button
-int blockCollected = 0;
+//int blockCollected = 0;
 //constants
 const int error = 20;  // for the error on the ultrasound reading
 
@@ -68,9 +68,9 @@ int turnStage180 = 0;
 //2 is straight, 0 is right, 1 is left.  3 is if we have reached the end of the sequence
 int pathList[] = { 2, 0, 2, 1, 1, 2, 2, 2, 1, 1, 2, 3 };
 int pathStage = 0;
-//so we can store which density of block we have
-int isHeavyBlock = 0;
-int isLightBlock = 0;
+//so we can store which density of block we have, 1 heavy, -1 light
+int blockType = 0;
+
 
 
 //--------------------------------------------------functions-----------------------------------------
@@ -252,7 +252,7 @@ void checkForBlockDownwards() {
       ;
     }
     blockBurglar();
-    blockCollected = 1;
+    //blockCollected = 1;
   }
 }
 //to trap the block in the cage
@@ -270,11 +270,11 @@ void blockBurglar() {
   if (reading < 46) {
     digitalWrite(redLED, HIGH);
     digitalWrite(greenLED, LOW);
-    isHeavyBlock = 1;
+    blockType = 1;
   } else {
     digitalWrite(greenLED, HIGH);
     digitalWrite(redLED, LOW);
-    isLightBlock = 1;
+    blockType = -1;
   }
   ETgoHome();
 }
@@ -333,13 +333,7 @@ void ETgoHome() {
   deliverBlock();
 }
 
-void deliverBlock() {
-  //delivering the heavy block
-  if (isHeavyBlock = 1) {  //right turn and deliver to red square
-    speedRight(150);
-    speedLeft(-150);
-    delay(3000);
-    //keeps going forwards till we hit the line with one sensor
+void alignChassis(){
     while (digitalRead(leftLS) == 0 && digitalRead(rightLS) == 0) {
       speedRight(150);
       speedLeft(150);
@@ -351,59 +345,58 @@ void deliverBlock() {
     while (digitalRead(rightLS)==1 && digitalRead(leftLS) == 0) {
       speedLeft(0);
     }
+}
+void deliverBlock() {
+  //delivering the blocks from the home square and then getting back to the home square and resetting
+  //right turn and deliver to red square
+    speedRight(150*blockType);// blockType is -1 for light block, so it will go to the green sqaure instead
+    speedLeft(-150*blockType);
+    delay(3000);
+    //keeps going forwards till we hit the line with one sensor
+    alignChassis();
+    //we should now be perfectly lined up to go forwards
     speedLeft(defaultSpeedLeft);
     speedRight(defaultSpeedRight);
+    delay(500);
     while (digitalRead(leftLS) == 0) {
       ;
     }
     //now we should be at the red square
+    speedLeft(0);
+    speedRight(0);
     for (servoPos = 50; servoPos >= 0; servoPos -= 1) {
       myServo.write(servoPos);  // tell servo to go to position in variable 'pos'
       delay(15);                // waits 15 ms for the servo to reach the position
     }
-
-
-    //delivering the less dense
-  } else if (isLightBlock = 1) {
-    speedRight(-150);  //left turn
-    speedLeft(150);
-    delay(3000);
-    //keeps going forwards till we hit the line with one sensor
-    while (digitalRead(leftLS) == 0 && digitalRead(rightLS) == 0) {
-      speedRight(150);
-      speedLeft(150);
-    }
-    //lines up the other line sensor
-    while (digitalRead(leftLS) && digitalRead(rightLS) == 0) {
-      speedLeft(0);
-    }
-    while (digitalRead(rightLS) && digitalRead(leftLS) == 0) {
-      speedRight(0);
-    }
-    speedLeft(defaultSpeedLeft);
-    speedRight(defaultSpeedRight);
-    while (digitalRead(leftLS) == 0) {
+    speedLeft(-defaultSpeedLeft);
+    speedRight(-defaultSpeedRight);
+    delay(500);
+    while (digitalRead(leftLS)==0){
       ;
     }
-    //now we should be at the green square
-    for (servoPos = 50; servoPos >= 0; servoPos -= 1) {
-      myServo.write(servoPos);  // tell servo to go to position in variable 'pos'
-      delay(15);                // waits 15 ms for the servo to reach the position
-    }
-  }
+    delay(1500);//should now be back in start box
+    speedRight(150*blockType);
+    speedLeft(-150*blockType);
+    delay(3000);//should now be facing correct direction
+    alignChassis();
+    speedLeft(-150);
+    speedRight(-150);
+    delay(300);
+    pathStage=0;
+
+}
 
 
 
 
-  isHeavyBlock = 0;
-  isLightBlock = 0;
+
 
   //need to add code to get back to the starting position after delivering block
   //Turned to go to red square when should have gone to green. 
   //When we dont have a T but an L junction, will the 1,0,1 turn still work?
 
   //ALSO THE RED LINES MAY NOT TRIP THE WHITE LINE SENSORS SO MAY HAVE TO USE DELAYS
-}
+
 
 
 /*
@@ -462,9 +455,9 @@ void loop() {
     delay(1500);
   }
   if (start == 1) {
-    if (blockCollected == 0) {
-      checkForBlockDownwards();
-    }
+    //if (blockCollected == 0) {
+    checkForBlockDownwards();
+    //}
 
     digitalWrite(blueLED, LOW);
     speedRight(defaultSpeedRight);
