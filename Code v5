@@ -65,7 +65,9 @@ int turnStage = 0;
 //2 is straight, 0 is right, 1 is left.  3 is if we have reached the end of the sequence
 int pathList[]={2,0,2,1,1,2,2,2,1,1,2,3};
 int pathStage = 0;
-
+//so we can store which density of block we have
+int isHeavyBlock = 0;
+int isLightBlock = 0;
 
 
 //--------------------------------------------------functions-----------------------------------------
@@ -243,10 +245,12 @@ void blockBurglar() {
   if (reading<52){
     digitalWrite(redLED, HIGH);
     digitalWrite(greenLED, LOW);
+    isHeavyBlock = 1;
   }
   else{
     digitalWrite(greenLED, HIGH);
     digitalWrite(redLED, LOW);
+    isLightBlock = 1;
   }
   ETgoHome();
 }
@@ -259,10 +263,10 @@ void ETgoHome(){
     leftTurn();
     turnStage = 1;//because of the turning list method, and our delays, if we dont do this 180 is 270
     leftTurn();
-    while (turnStage >=0){
+    while (pathStage >=0){
         followLine();
         if (digitalRead(rightLS)){
-            int turnValue = pathList[turnStage];
+            int turnValue = pathList[pathStage];
             if (turnValue == 0 ){//what would be a right turn is now a left
                 leftTurn();
             }else if (turnValue ==1){//what would be a left turn is now a right
@@ -273,12 +277,82 @@ void ETgoHome(){
             turnStage -=1;//we are going back up the turn list  
             speedLeft( defaultSpeedLeft);
             speedRight( defaultSpeedRight);
-            delay(2000);//to make sure it can get off the junction and not redect it  
+            delay(500);//to make sure it can get off the junction and not redect it  
         }
+      delay(500);
+      speedLeft(0);
+      speedRight(0);//we should now be in the home box
+      deliverBlock();
     }
 }
 
+void deliverBlock(){
+  //delivering the heavy block
+  if (isHeavyBlock = 1){//right turn and deliver to red square
+    speedRight(150);
+    speedLeft(-150);
+    delay(3000);
+    //keeps going forwards till we hit the line with one sensor
+    while (digitalRead(leftLS)==0 && digitalRead(rightLS)==0){
+      speedRight(150);
+      speedLeft(150);
+    }
+    //lines up the other line sensor
+    while (digitalRead(leftLS) && digitalRead(rightLS)==0){
+      speedLeft(0);
+    }
+    while (digitalRead(rightLS) && digitalRead(leftLS)==0){
+      speedRight(0);
+    }
+    speedLeft(defaultSpeedLeft);
+    speedRight(defaultSpeedRight);
+    while (digitalRead(leftLS)==0){
+      ;
+    }
+    //now we should be at the red square
+    for (servoPos = 50; servoPos >= 0; servoPos -= 1) {
+      myServo.write(servoPos);  // tell servo to go to position in variable 'pos'
+      delay(15);                // waits 15 ms for the servo to reach the position
+    }
 
+
+  //delivering the less dense
+  }else if (isLightBlock = 1){
+    speedRight(-150);//left turn
+    speedLeft(150);
+    delay(3000);
+    //keeps going forwards till we hit the line with one sensor
+    while (digitalRead(leftLS)==0 && digitalRead(rightLS)==0){
+      speedRight(150);
+      speedLeft(150);
+    }
+    //lines up the other line sensor
+    while (digitalRead(leftLS) && digitalRead(rightLS)==0){
+      speedLeft(0);
+    }
+    while (digitalRead(rightLS) && digitalRead(leftLS)==0){
+      speedRight(0);
+    }
+    speedLeft(defaultSpeedLeft);
+    speedRight(defaultSpeedRight);
+    while (digitalRead(leftLS)==0){
+      ;
+    }
+    //now we should be at the green square
+    for (servoPos = 50; servoPos >= 0; servoPos -= 1) {
+      myServo.write(servoPos);  // tell servo to go to position in variable 'pos'
+      delay(15);                // waits 15 ms for the servo to reach the position
+    }
+  }
+
+
+
+
+  isHeavyBlock = 0;
+  isLightBlock = 0;
+
+
+}
 
 
 /*
@@ -341,10 +415,11 @@ void loop() {
       checkForBlockDownwards();
     }
 
-    digitalWrite(blueLED,HIGH);
+    digitalWrite(blueLED,LOW);
     speedRight( defaultSpeedRight);
     speedLeft( defaultSpeedLeft);
     moveToJunction();
+    digitalWrite(blueLED,HIGH);//Blue LED needs to flash
 
   }
   
