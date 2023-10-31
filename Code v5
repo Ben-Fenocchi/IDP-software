@@ -46,27 +46,27 @@ float distanceAfterTurn = 0;  // Declare distanceAfterTurn as a global variable
 int defaultSpeed = 220;
 int defaultSpeedLeft = defaultSpeed;
 int defaultSpeedRight = defaultSpeedLeft;
-float initialAdjustmentSpeed = defaultSpeed - 60;
+float initialAdjustmentSpeed = defaultSpeed - 65;
 float adjustmentSpeed = initialAdjustmentSpeed;
-int home = 1;  //so we know when we are home
-int start = 0; //robot will not move untill told to start by the button
+int home = 1;   //so we know when we are home
+int start = 0;  //robot will not move untill told to start by the button
 int blockCollected = 0;
 //constants
 const int error = 20;  // for the error on the ultrasound reading
 
 //for if both sensors go off, we know which ones to speed up
-int lastSensorOn = 3; //1 for left 2 for right, 3 for the very start when both sensors are off
+int lastSensorOn = 3;  //1 for left 2 for right, 3 for the very start when both sensors are off
 
 //for the 90 degree turns
-int turningList[]={1,0,1,4};
+int turningList[] = { 1, 0, 1, 4 };
 int turnStage = 0;
 //for 180 degree turn
-int turningList180[]={1,0,1,0,1,4};
+int turningList180[] = { 1, 0, 1, 0, 1, 4 };
 int turnStage180 = 0;
 
 //for the path
 //2 is straight, 0 is right, 1 is left.  3 is if we have reached the end of the sequence
-int pathList[]={2,0,2,1,1,2,2,2,1,1,2,3};
+int pathList[] = { 2, 0, 2, 1, 1, 2, 2, 2, 1, 1, 2, 3 };
 int pathStage = 0;
 //so we can store which density of block we have
 int isHeavyBlock = 0;
@@ -105,95 +105,92 @@ void speedRight(int speed) {
     oldSpeedRight = speed;
   }
 }
-void turn180(){
+void turn180() {
   speedRight(-150);
   speedLeft(150);
-  while ((turningList180[turnStage180])!= 4){
-    if (turningList180[turnStage180] == digitalRead(leftLS)){
+  while ((turningList180[turnStage180]) != 4) {
+    if (turningList180[turnStage180] == digitalRead(leftLS)) {
       Serial.println(turningList180[turnStage180]);
-      turnStage180 +=1;
+      turnStage180 += 1;
     }
   }
   //to align the chassis after the turn
-  while (digitalRead(rightLS)!=1){
+  while (digitalRead(rightLS) != 1) {
     speedLeft(-150);
     speedRight(0);
   }
   turnStage180 = 0;
-
+  delay(300);
 }
 void leftTurn() {
-
-  speedRight( -150);
-  speedLeft( 150);
-  while ((turningList[turnStage])!= 4){
-    if (turningList[turnStage] == digitalRead(leftLS)){
+  Serial.println("left turn started");
+  speedRight(-150);
+  speedLeft(150);
+  while ((turningList[turnStage]) != 4) {
+    if (turningList[turnStage] == digitalRead(leftLS)) {
       Serial.println(turningList[turnStage]);
-      turnStage +=1;
+      turnStage += 1;
     }
   }
   turnStage = 0;
-  delay(600);//delay for callibration
 
   distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
 
-  Serial.println("turn finished");
+  Serial.println("left turn finished");
 
   adjustmentSpeed = initialAdjustmentSpeed;
 }
 void rightTurn() {
-  speedRight( 150);
-  speedLeft( -150);
-  while ((turningList[turnStage])!= 4){
-    if (turningList[turnStage] == digitalRead(leftLS)){
+  Serial.println("right turn started");
+  speedRight(150);
+  speedLeft(-150);
+  while ((turningList[turnStage]) != 4) {
+    if (turningList[turnStage] == digitalRead(leftLS)) {
       Serial.println(turningList[turnStage]);
-      turnStage +=1;
+
+      turnStage += 1;
     }
   }
   turnStage = 0;
-  delay(600);//delay for callibration
 
 
   //calculate new initialised side sensor reading
   distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
 
-  Serial.println("turn finished");
-  
+  Serial.println("right turn finished");
+
   adjustmentSpeed = initialAdjustmentSpeed;
 }
 void followLine() {
   int valLeft = digitalRead(flLS);
   int valRight = digitalRead(frLS);
   //if left is on and right is off, slow down the left one
-  
+
   if (valLeft > valRight) {
-    speedRight(defaultSpeedRight);//both slow down, but left motor slows down more
+    speedRight(defaultSpeedRight+15);  
     speedLeft(adjustmentSpeed);
-    Serial.println("left turn adjustment");
-    if (adjustmentSpeed<defaultSpeed){
-      adjustmentSpeed +=0.5;
+    //Serial.println("left turn adjustment");
+    if (adjustmentSpeed < defaultSpeed) {
+      adjustmentSpeed += 0.8;
     }
 
   }
   //if right is on and left is off, slow down the right one
   else if (valRight > valLeft) {
-    speedLeft( defaultSpeedLeft);
-    speedRight( adjustmentSpeed);
-    Serial.println("right turn adjustment");
-    if (adjustmentSpeed<defaultSpeed){
-      adjustmentSpeed +=0.5;
+    speedLeft(defaultSpeedLeft+15);
+    speedRight(adjustmentSpeed);
+    //Serial.println("right turn adjustment");
+    if (adjustmentSpeed < defaultSpeed) {
+      adjustmentSpeed += 0.8;
     }
 
   }
   //if both are of (either side of line) then set speed to default forward
-  else if (valRight == valLeft && valLeft== 0) {
-    speedLeft( defaultSpeedLeft);
-    speedRight( defaultSpeedRight);
+  else if (valRight == valLeft && valLeft == 0) {
+    speedLeft(defaultSpeedLeft);
+    speedRight(defaultSpeedRight);
     adjustmentSpeed = initialAdjustmentSpeed;
   }
-
-  
-  
 }
 
 
@@ -201,13 +198,13 @@ void moveToJunction() {
   followLine();
   if (digitalRead(leftLS)) {
     Serial.println("Junction");
-    Serial.println("Edging forwards");//this should get us right on the edge of the junction before turning
+    Serial.println("Edging forwards");  //this should get us right on the edge of the junction before turning
     //if this works need to add to the go home function
     speedLeft(95);
     speedRight(95);
-    delay(500);
-    speedLeft( 0);
-    speedRight( 0);
+    delay(250);
+    speedLeft(0);
+    speedRight(0);
     delay(1000);
 
 
@@ -215,27 +212,28 @@ void moveToJunction() {
     if (pathList[pathStage] == 1) {
       Serial.println("turning left");
       leftTurn();
-      
+      delay(500);
+
     } else if (pathList[pathStage] == 0) {
       Serial.println("Turning right");
       rightTurn();
+      delay(500);
 
-    } else if (pathList[pathStage] ==2){
+    } else if (pathList[pathStage] == 2) {
       Serial.println("going Straight");
-      speedLeft( defaultSpeedLeft);
-      speedRight( defaultSpeedRight);
-    
-    } else {
-        Serial.println("Finished Path");
-        delay(5000);
+      speedLeft(defaultSpeedLeft);
+      speedRight(defaultSpeedRight);
 
+    } else {
+      Serial.println("Finished Path");
+      delay(5000);
     }
     //updating the index for the pathList
-    pathStage +=1;
+    pathStage += 1;
 
-    speedLeft( defaultSpeedLeft);
-    speedRight( defaultSpeedRight);
-    delay(500);//to make sure it can get off the junction and not redect it
+    speedLeft(defaultSpeedLeft);
+    speedRight(defaultSpeedRight);
+    delay(500);  //to make sure it can get off the junction and not redect it
   }
 }
 
@@ -250,7 +248,7 @@ void checkForBlockDownwards() {
     //to make sure it goes up to the junction before calling its 180 degree turn to go home
     speedLeft(defaultSpeedLeft);
     speedRight(defaultSpeedRight);
-    while(digitalRead(leftLS)!=1){
+    while (digitalRead(leftLS) != 1) {
       ;
     }
     blockBurglar();
@@ -269,12 +267,11 @@ void blockBurglar() {
   }
   delay(300);
   //if higher density block fire red
-  if (reading<52){
+  if (reading < 56) {
     digitalWrite(redLED, HIGH);
     digitalWrite(greenLED, LOW);
     isHeavyBlock = 1;
-  }
-  else{
+  } else {
     digitalWrite(greenLED, HIGH);
     digitalWrite(redLED, LOW);
     isLightBlock = 1;
@@ -285,58 +282,78 @@ void blockBurglar() {
 
 //function should be called when a block is collected. However robot should drive to the next junction so we
 //have a grid to turn against for the 180 turn in the ETgoHome function
-void ETgoHome(){
-    Serial.println("Going Home");
-    turn180();
-    Serial.println("180 DEGREES");
-    //pathStage -=1;
-    while (pathStage >=0){
-        followLine();
-        if (digitalRead(rightLS)){
-            int turnValue = pathList[pathStage];
-            Serial.println("Turn number is");
-            Serial.println(turnValue);
-            if (turnValue == 0 ){//what would be a right turn is now a left
-                leftTurn();
-            }else if (turnValue ==1){//what would be a left turn is now a right
-                rightTurn();
-            }else{
-                speedLeft(defaultSpeedLeft);
-                speedRight(defaultSpeedRight);
-            }
-            turnStage -=1;//we are going back up the turn list  
-            speedLeft( defaultSpeedLeft);
-            speedRight( defaultSpeedRight);
-            delay(500);//to make sure it can get off the junction and not redect it  
-        }
-      delay(500);
-      speedLeft(0);
-      speedRight(0);//we should now be in the home box
-      deliverBlock();
+void ETgoHome() {
+  Serial.println("Going Home");
+  turn180();
+  Serial.println("180 DEGREES");
+  pathStage -= 1;
+  //we will always need to go one junction straight
+  //delay to get off the junction
+  speedLeft(defaultSpeedLeft);
+  speedRight(defaultSpeedRight);
+  delay(600);
+  
+  while (digitalRead(rightLS) != 1) {
+    followLine();
+  }
+  
+  while (pathStage >= 0) {
+    followLine();
+    //Serial.println("Path stage is");
+    //Serial.println(pathStage);
+    if (digitalRead(rightLS)==1) {
+      int turnValue = pathList[pathStage];
+      /*
+      Serial.println("current turn is");
+      Serial.println(pathList[pathStage]);
+      Serial.println("Next turn is");
+      Serial.println(pathList[pathStage - 1]);
+      Serial.println("At a junction");
+      */
+      if (turnValue == 0) {  //what would be a right turn is now a left
+        leftTurn();
+        delay(250);
+      } else if (turnValue == 1) {  //what would be a left turn is now a right
+        rightTurn();
+        delay(250);
+      } else {
+        ;
+      }
+      pathStage -= 1;  //we are going back up the turn list
+      speedLeft(defaultSpeedLeft);
+      speedRight(defaultSpeedRight);
+      delay(700);  //to make sure it can get off the junction and not redect it
+      //Serial.println("delay finished");
     }
+
+  }
+  delay(1200);
+  speedLeft(0);
+  speedRight(0);  //we should now be in the home box
+  deliverBlock();
 }
 
-void deliverBlock(){
+void deliverBlock() {
   //delivering the heavy block
-  if (isHeavyBlock = 1){//right turn and deliver to red square
+  if (isHeavyBlock = 1) {  //right turn and deliver to red square
     speedRight(150);
     speedLeft(-150);
     delay(3000);
     //keeps going forwards till we hit the line with one sensor
-    while (digitalRead(leftLS)==0 && digitalRead(rightLS)==0){
+    while (digitalRead(leftLS) == 0 && digitalRead(rightLS) == 0) {
       speedRight(150);
       speedLeft(150);
     }
     //lines up the other line sensor
-    while (digitalRead(leftLS) && digitalRead(rightLS)==0){
+    while (digitalRead(leftLS)==1 && digitalRead(rightLS) == 0) {
       speedLeft(0);
     }
-    while (digitalRead(rightLS) && digitalRead(leftLS)==0){
+    while (digitalRead(rightLS)==1 && digitalRead(leftLS) == 0) {
       speedRight(0);
     }
     speedLeft(defaultSpeedLeft);
     speedRight(defaultSpeedRight);
-    while (digitalRead(leftLS)==0){
+    while (digitalRead(leftLS) == 0) {
       ;
     }
     //now we should be at the red square
@@ -346,26 +363,26 @@ void deliverBlock(){
     }
 
 
-  //delivering the less dense
-  }else if (isLightBlock = 1){
-    speedRight(-150);//left turn
+    //delivering the less dense
+  } else if (isLightBlock = 1) {
+    speedRight(-150);  //left turn
     speedLeft(150);
     delay(3000);
     //keeps going forwards till we hit the line with one sensor
-    while (digitalRead(leftLS)==0 && digitalRead(rightLS)==0){
+    while (digitalRead(leftLS) == 0 && digitalRead(rightLS) == 0) {
       speedRight(150);
       speedLeft(150);
     }
     //lines up the other line sensor
-    while (digitalRead(leftLS) && digitalRead(rightLS)==0){
+    while (digitalRead(leftLS) && digitalRead(rightLS) == 0) {
       speedLeft(0);
     }
-    while (digitalRead(rightLS) && digitalRead(leftLS)==0){
+    while (digitalRead(rightLS) && digitalRead(leftLS) == 0) {
       speedRight(0);
     }
     speedLeft(defaultSpeedLeft);
     speedRight(defaultSpeedRight);
-    while (digitalRead(leftLS)==0){
+    while (digitalRead(leftLS) == 0) {
       ;
     }
     //now we should be at the green square
@@ -402,7 +419,7 @@ void setup() {
   Serial.begin(9600);
   Wire.begin();
   tofSensor.begin(0x50);
-  tofSensor.setMode(tofSensor.eContinuous,tofSensor.eHigh);
+  tofSensor.setMode(tofSensor.eContinuous, tofSensor.eHigh);
   tofSensor.start();
   pinMode(sideSensor, INPUT);  // the ultrasound sensor
 
@@ -415,9 +432,9 @@ void setup() {
   pinMode(greenLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
   //turns off all LED's
-  digitalWrite(redLED,LOW);
-  digitalWrite(greenLED,LOW);
-  digitalWrite(blueLED,LOW);
+  digitalWrite(redLED, LOW);
+  digitalWrite(greenLED, LOW);
+  digitalWrite(blueLED, LOW);
 
   pinMode(startButton, INPUT);
 
@@ -440,18 +457,15 @@ void loop() {
     start = 1;
     delay(1500);
   }
-  if (start==1){
-    if (blockCollected ==0){
+  if (start == 1) {
+    if (blockCollected == 0) {
       checkForBlockDownwards();
     }
 
-    digitalWrite(blueLED,LOW);
-    speedRight( defaultSpeedRight);
-    speedLeft( defaultSpeedLeft);
+    digitalWrite(blueLED, LOW);
+    speedRight(defaultSpeedRight);
+    speedLeft(defaultSpeedLeft);
     moveToJunction();
-    digitalWrite(blueLED,HIGH);//Blue LED needs to flash
-
+    digitalWrite(blueLED, HIGH);  //Blue LED needs to flash
   }
-  
-  
 }
