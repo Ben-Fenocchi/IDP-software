@@ -24,8 +24,8 @@ int servoPos = 0;           // variable to store the servo position
 
 //pin setups
 int sideSensor = A0;  //ultrasound sensor
-int frLS = 2;         // back right line sensor
-int flLS = 5;         // back left line sensor
+int frLS = 5;         // back right line sensor
+int flLS = 2;         // back left line sensor
 int leftLS = 3;       // left side line sensor
 int rightLS = 4;      // right side line sensor
 int redLED = 12;
@@ -60,6 +60,9 @@ int lastSensorOn = 3; //1 for left 2 for right, 3 for the very start when both s
 //for the 90 degree turns
 int turningList[]={1,0,1,4};
 int turnStage = 0;
+//for 180 degree turn
+int turningList180[]={1,0,1,0,1,4};
+int turnStage180 = 0;
 
 //for the path
 //2 is straight, 0 is right, 1 is left.  3 is if we have reached the end of the sequence
@@ -102,7 +105,25 @@ void speedRight(int speed) {
     oldSpeedRight = speed;
   }
 }
+void turn180(){
+  speedRight(-150);
+  speedLeft(150);
+  while ((turningList180[turnStage180])!= 4){
+    if (turningList180[turnStage180] == digitalRead(leftLS)){
+      Serial.println(turningList180[turnStage180]);
+      turnStage180 +=1;
+    }
+  }
+  //to align the chassis after the turn
+  while (digitalRead(rightLS)!=1){
+    speedLeft(-150);
+    speedRight(0);
+  }
+  turnStage180 = 0;
+
+}
 void leftTurn() {
+
   speedRight( -150);
   speedLeft( 150);
   while ((turningList[turnStage])!= 4){
@@ -112,7 +133,7 @@ void leftTurn() {
     }
   }
   turnStage = 0;
-  delay(300);//delay for callibration
+  delay(600);//delay for callibration
 
   distanceAfterTurn = (analogRead(sideSensor)) * MAX_RANG / ADC_SOLUTION;
 
@@ -130,7 +151,7 @@ void rightTurn() {
     }
   }
   turnStage = 0;
-  delay(300);//delay for callibration
+  delay(600);//delay for callibration
 
 
   //calculate new initialised side sensor reading
@@ -226,6 +247,12 @@ void checkForBlockDownwards() {
   //Serial.println(reading);
   if (reading < 70) {
     Serial.println("Block");
+    //to make sure it goes up to the junction before calling its 180 degree turn to go home
+    speedLeft(defaultSpeedLeft);
+    speedRight(defaultSpeedRight);
+    while(digitalRead(leftLS)!=1){
+      ;
+    }
     blockBurglar();
     blockCollected = 1;
   }
@@ -259,20 +286,23 @@ void blockBurglar() {
 //function should be called when a block is collected. However robot should drive to the next junction so we
 //have a grid to turn against for the 180 turn in the ETgoHome function
 void ETgoHome(){
-    
-    leftTurn();
-    turnStage = 1;//because of the turning list method, and our delays, if we dont do this 180 is 270
-    leftTurn();
+    Serial.println("Going Home");
+    turn180();
+    Serial.println("180 DEGREES");
+    //pathStage -=1;
     while (pathStage >=0){
         followLine();
         if (digitalRead(rightLS)){
             int turnValue = pathList[pathStage];
+            Serial.println("Turn number is");
+            Serial.println(turnValue);
             if (turnValue == 0 ){//what would be a right turn is now a left
                 leftTurn();
             }else if (turnValue ==1){//what would be a left turn is now a right
                 rightTurn();
             }else{
-                //go straight
+                speedLeft(defaultSpeedLeft);
+                speedRight(defaultSpeedRight);
             }
             turnStage -=1;//we are going back up the turn list  
             speedLeft( defaultSpeedLeft);
