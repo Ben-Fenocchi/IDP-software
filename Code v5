@@ -67,10 +67,10 @@ int turnStage180 = 0;
 int turningList180T[] = { 1, 0, 1, 0, 1, 4 };
 int turnStage180T = 0;
 //stores whether we are at a t junction or not
-int tJunction = 0
+int tJunction = 0;
 //for the path
 //2 is straight, 0 is right, 1 is left.  3 is if we have reached the end of the sequence
-int pathList[] = { 2, 0, 2, 1, 1, 2, 2, 2, 1, 1, 2, 3 };
+int pathList[] = {2,0,2,1,2,1,1,2,1,2,2,2,1,2,2,2,1};
 int pathStage = 0;
 //so we can store which density of block we have, 1 heavy, -1 light
 int blockType = 0;
@@ -121,6 +121,7 @@ void turn180() {
   }
 
   if (tJunction){
+    Serial.println("T junction");
     speedRight(-150);
     speedLeft(150);
     while ((turningList180T[turnStage180T]) != 4) {
@@ -131,23 +132,29 @@ void turn180() {
     }
     //to align the chassis after the turn
     while (digitalRead(rightLS) != 1) {
-      speedLeft(-150);
+      speedLeft(-250);
       speedRight(0);
     }
   } else{//for non t junctions best to turn clockwise instead of anti as this then means we dont have to do diff code for the top left and right corners
       speedRight(150);
       speedLeft(-150);
+      Serial.println("not t");
       while ((turningList180[turnStage180]) != 4) {
         if (turningList180[turnStage180] == digitalRead(rightLS)) {
           Serial.println(turningList180[turnStage180]);
           turnStage180 += 1;
         }
       }
+      /*
       //to align the chassis after the turn
       while (digitalRead(leftLS) != 1) {
         speedLeft(0);
-        speedRight(-150);
-      }
+        speedRight(-250);
+      }*/
+      //little shimmy yah shimy yeh
+      speedRight(-150);
+      speedLeft(0);
+      delay(300);
   }
 
   turnStage180T = 0;
@@ -199,21 +206,21 @@ void followLine() {
   //if left is on and right is off, slow down the left one
 
   if (valLeft > valRight) {
-    speedRight(defaultSpeedRight+15);  
+    speedRight(defaultSpeedRight);  
     speedLeft(adjustmentSpeed);
     //Serial.println("left turn adjustment");
     if (adjustmentSpeed < defaultSpeed) {
-      adjustmentSpeed += 0.8;
+      adjustmentSpeed += 0.25;
     }
 
   }
   //if right is on and left is off, slow down the right one
   else if (valRight > valLeft) {
-    speedLeft(defaultSpeedLeft+15);
+    speedLeft(defaultSpeedLeft);
     speedRight(adjustmentSpeed);
     //Serial.println("right turn adjustment");
     if (adjustmentSpeed < defaultSpeed) {
-      adjustmentSpeed += 0.8;
+      adjustmentSpeed += 0.25;
     }
 
   }
@@ -237,19 +244,19 @@ void moveToJunction() {
     delay(250);
     speedLeft(0);
     speedRight(0);
-    delay(1000);
+    //delay(1000);
 
 
 
     if (pathList[pathStage] == 1) {
       Serial.println("turning left");
       leftTurn();
-      delay(500);
+      delay(450);
 
     } else if (pathList[pathStage] == 0) {
       Serial.println("Turning right");
       rightTurn();
-      delay(500);
+      delay(450);
 
     } else if (pathList[pathStage] == 2) {
       Serial.println("going Straight");
@@ -299,7 +306,7 @@ void blockBurglar() {
   }
   delay(300);
   //if higher density block fire red
-  if (reading < 46) {
+  if (reading < 49) {
     digitalWrite(redLED, HIGH);
     digitalWrite(greenLED, LOW);
     blockType = 1;
@@ -345,10 +352,10 @@ void ETgoHome() {
       */
       if (turnValue == 0) {  //what would be a right turn is now a left
         leftTurn();
-        delay(250);
+        delay(100);
       } else if (turnValue == 1) {  //what would be a left turn is now a right
         rightTurn();
-        delay(250);
+        delay(100);
       } else {
         ;
       }
@@ -360,7 +367,7 @@ void ETgoHome() {
     }
 
   }
-  delay(1200);
+  delay(1500);
   speedLeft(0);
   speedRight(0);  //we should now be in the home box
   deliverBlock();
@@ -391,9 +398,16 @@ void deliverBlock() {
     speedLeft(defaultSpeedLeft);
     speedRight(defaultSpeedRight);
     delay(500);
+    if (blockType ==1){
+      delay(6000);
+    }
+    else{//the red line is not picked up by the line sensors
     while (digitalRead(leftLS) == 0) {
       ;
     }
+    }
+
+    delay(500);//to get far enough into red square
     //now we should be at the red square
     speedLeft(0);
     speedRight(0);
@@ -403,14 +417,14 @@ void deliverBlock() {
     }
     speedLeft(-defaultSpeedLeft);
     speedRight(-defaultSpeedRight);
-    delay(500);
+    delay(700);//to get outr of red square
     while (digitalRead(leftLS)==0){
       ;
     }
-    delay(1500);//should now be back in start box
+    delay(1100);//should now be back in centre of start box
     speedRight(150*blockType);
     speedLeft(-150*blockType);
-    delay(3000);//should now be facing correct direction
+    delay(2700);//should now be facing correct direction
     alignChassis();
     speedLeft(-150);
     speedRight(-150);
@@ -418,6 +432,9 @@ void deliverBlock() {
     pathStage=0;
     speedLeft(0);
     speedRight(0);
+    digitalWrite(greenLED,LOW);
+    digitalWrite(redLED,LOW);
+    //ready to start again
     //stop when collected 2 blocks
     if (totalBlocksCollected == 2){
       delay(50000000000);
