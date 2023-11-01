@@ -75,6 +75,8 @@ int pathStage = 0;
 //so we can store which density of block we have, 1 heavy, -1 light
 int blockType = 0;
 
+int totalBlocksCollected = 0;
+
 
 
 //--------------------------------------------------functions-----------------------------------------
@@ -112,7 +114,7 @@ void speedRight(int speed) {
 void turn180() {
   speedRight(-150);
   speedLeft(150);
-  if (pathStage == || pathStage== || pathStage==){
+  if (pathStage == 0 || pathStage==1 || pathStage==3 || pathStage==10 || pathStage==12 || pathStage==17){
     tJunction = 1;
   } else{
     tJunction = 0;
@@ -127,21 +129,27 @@ void turn180() {
         turnStage180T += 1;
       }
     }
+    //to align the chassis after the turn
+    while (digitalRead(rightLS) != 1) {
+      speedLeft(-150);
+      speedRight(0);
+    }
   } else{//for non t junctions best to turn clockwise instead of anti as this then means we dont have to do diff code for the top left and right corners
-      speedRight(-150);
-      speedLeft(150);
+      speedRight(150);
+      speedLeft(-150);
       while ((turningList180[turnStage180]) != 4) {
         if (turningList180[turnStage180] == digitalRead(rightLS)) {
           Serial.println(turningList180[turnStage180]);
           turnStage180 += 1;
         }
       }
+      //to align the chassis after the turn
+      while (digitalRead(leftLS) != 1) {
+        speedLeft(0);
+        speedRight(-150);
+      }
   }
-  //to align the chassis after the turn
-  while (digitalRead(rightLS) != 1) {
-    speedLeft(-150);
-    speedRight(0);
-  }
+
   turnStage180T = 0;
   turnStage180 = 0;
   delay(300);
@@ -300,6 +308,7 @@ void blockBurglar() {
     digitalWrite(redLED, LOW);
     blockType = -1;
   }
+  totalBlocksCollected +=1;
   ETgoHome();
 }
 
@@ -407,6 +416,12 @@ void deliverBlock() {
     speedRight(-150);
     delay(300);
     pathStage=0;
+    speedLeft(0);
+    speedRight(0);
+    //stop when collected 2 blocks
+    if (totalBlocksCollected == 2){
+      delay(50000000000);
+    }
 
 }
 
