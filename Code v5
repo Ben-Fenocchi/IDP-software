@@ -41,7 +41,7 @@ int oldSpeedRight = 0;        // Declare oldSpeed as a global variable
 int valLeft = 0;              // Declare valLeft as a global variable
 int valRight = 0;             // Declare valRight as a global variable
 float distanceAfterTurn = 0;  // Declare distanceAfterTurn as a global variable
-
+int flashingBlue = 0;
 
 int defaultSpeed = 220;
 int defaultSpeedLeft = defaultSpeed;
@@ -514,11 +514,22 @@ void loop() {
     //if (blockCollected == 0) {
     checkForBlockDownwards();
     //}
-
     digitalWrite(blueLED, LOW);
     speedRight(defaultSpeedRight);
     speedLeft(defaultSpeedLeft);
     moveToJunction();
-    digitalWrite(blueLED, HIGH);  //Blue LED needs to flash
+    flashingBlue += 1;
+    if (flashingBlue == 100) {
+      if (digitalRead(blueLED, LOW)) {
+        digitalWrite(blueLED, HIGH);  //Blue LED needs to flash
+        flashingBlue = 0;
+      }
+      else {
+        digitalWrite(blueLED, LOW);  //Blue LED needs to flash
+        flashingBlue = 0;
+      }
+
+    }
+    
   }
 }
